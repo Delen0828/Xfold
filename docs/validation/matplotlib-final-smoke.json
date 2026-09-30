@@ -1,0 +1,123 @@
+{
+  "engine": "xfold 0.1.0",
+  "platform": "macOS-27.0-arm64-arm-64bit",
+  "cpuCount": 12,
+  "suite": "smoke",
+  "repository": "/Users/shu343/Documents/Code Lab/CodeVis/sem-test/cache/matplotlib__matplotlib.git",
+  "cases": [
+    {
+      "name": "stackplot",
+      "base": "14c96b510ebeba40f573e512299b1976f35b620e",
+      "target": "d671446d82b085e7a16e9cdf4f2cff80eda2e2d2",
+      "synthetic": false,
+      "graphHash": "84be2b557f11eaf72cded4bebcde8fc814841a1e344a07dbec2fa17d53e4717d",
+      "modules": 114538,
+      "edges": 47737,
+      "incremental": {
+        "mode": "incremental",
+        "durationMs": 8270,
+        "filesChanged": 2,
+        "filesParsed": 2,
+        "filesReused": 958,
+        "filesResolved": 841,
+        "filesDeleted": 0,
+        "edgesReused": 13745,
+        "edgesRederived": 37141,
+        "artifactBytes": 111435254
+      },
+      "cold": {
+        "mode": "cold",
+        "durationMs": 27517,
+        "filesChanged": 1799,
+        "filesParsed": 1799,
+        "filesReused": 0,
+        "filesResolved": 1799,
+        "filesDeleted": 0,
+        "edgesReused": 0,
+        "edgesRederived": 50886,
+        "artifactBytes": 111435254
+      },
+      "incrementalWallSeconds": 11.389280124999999,
+      "coldWallSeconds": 58.450858834000016,
+      "equal": true
+    },
+    {
+      "name": "colormap",
+      "base": "139c04587980436c8fa96e6724ca3c150741ab70",
+      "target": "63c97a29c95c1c85de249afca4e8915b9fa24d1a",
+      "synthetic": false,
+      "graphHash": "888460e1279ca2fb8e1922f8a8092fc105eafb7c10395805c3c13476d547a024",
+      "modules": 118480,
+      "edges": 48092,
+      "incremental": {
+        "mode": "incremental",
+        "durationMs": 6807,
+        "filesChanged": 3,
+        "filesParsed": 3,
+        "filesReused": 127,
+        "filesResolved": 1756,
+        "filesDeleted": 0,
+        "edgesReused": 1224,
+        "edgesRederived": 50026,
+        "artifactBytes": 114508236
+      },
+      "cold": {
+        "mode": "cold",
+        "durationMs": 20982,
+        "filesChanged": 2494,
+        "filesParsed": 1883,
+        "filesReused": 0,
+        "filesResolved": 1883,
+        "filesDeleted": 0,
+        "edgesReused": 0,
+        "edgesRederived": 51250,
+        "artifactBytes": 114508236
+      },
+      "incrementalWallSeconds": 8.927340083000018,
+      "coldWallSeconds": 33.413653374999996,
+      "equal": true
+    },
+    {
+      "name": "antialiasing",
+      "base": "26224d96066b5c60882296c551f54ca7732c0af0",
+      "target": "74c0cd0c1363f39076e0a65c9492f1275c24d8cf",
+      "synthetic": false,
+      "graphHash": "57f5fcf1b0b2a5b0f66115cb80b32c5fba0627d9a4a2bf4f89c05b200dd13548",
+      "modules": 118483,
+      "edges": 48137,
+      "incremental": {
+        "mode": "incremental",
+        "durationMs": 6677,
+        "filesChanged": 5,
+        "filesParsed": 5,
+        "filesReused": 122,
+        "filesResolved": 1760,
+        "filesDeleted": 0,
+        "edgesReused": 1166,
+        "edgesRederived": 50149,
+        "artifactBytes": 114539537
+      },
+      "cold": {
+        "mode": "cold",
+        "durationMs": 16064,
+        "filesChanged": 1884,
+        "filesParsed": 1882,
+        "filesReused": 0,
+        "filesResolved": 1882,
+        "filesDeleted": 0,
+        "edgesReused": 0,
+        "edgesRederived": 51315,
+        "artifactBytes": 114539537
+      },
+      "incrementalWallSeconds": 9.025327000000004,
+      "coldWallSeconds": 20.57349937500001,
+      "equal": true
+    }
+  ],
+  "failures": [],
+  "peakWorkerRssKb": 2785152,
+  "elapsedSeconds": 245.218535209,
+  "passed": 3,
+  "expected": 3,
+  "ok": true
+}

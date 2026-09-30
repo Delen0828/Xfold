@@ -1,0 +1,229 @@
+[package]
+name = "sem-core"
+version = "0.25.0"
+edition = "2021"
+license = "MIT OR Apache-2.0"
+description = "Entity-level semantic diff engine. Extracts functions, classes, and methods from 28 languages via tree-sitter and diffs at the entity level."
+repository = "https://github.com/Ataraxy-Labs/sem"
+homepage = "https://github.com/Ataraxy-Labs/sem"
+keywords = ["diff", "semantic", "tree-sitter", "ast", "code-analysis"]
+categories = ["development-tools", "parser-implementations"]
+readme = "../../README.md"
+
+[features]
+default = ["git", "parallel", "grammar-all", "mmap"]
+git = ["dep:git2"]
+parallel = ["dep:rayon"]
+wasm = []
+# Memory-mapped reads for the query index (parser-adjacent).
+# Kept behind a feature, and the reader is defined over `&[u8]` regardless, so
+# `wasm` — where mmap does not exist — builds the same format code with the
+# owned-bytes constructor and no dependency.
+mmap = ["dep:memmap2"]
+
+# The unified `cache.db` persistence layer: schema, freshness,
+# manifest handling and the `DiskCache` constructor family that `sem-cli` and
+# `sem-mcp` both used to hand-roll separately (a disclosed duplicate-authority finding). Off by default and behind its own
+# feature — same reasoning as `git`/`mmap` above — because `rusqlite`'s
+# `bundled` feature compiles libsqlite3 from C source, which the `wasm`
+# feature's whole point is to stay clear of. Depends on `git` for
+# `index_commits`' `GitBridge`/semantic-diff use.
+disk-cache = ["dep:rusqlite", "dep:zstd", "git"]
+
+# Spike: an oxc-based fast path for TS/JS entity extraction. Off by default.
+# The measurement and verdict.
+oxc-fastpath = [
+    "dep:oxc_parser", "dep:oxc_ast", "dep:oxc_ast_visit",
+    "dep:oxc_allocator", "dep:oxc_span", "dep:oxc_syntax",
+]
+
+# Grammar groups
+grammar-core = [
+    "lang-typescript", "lang-javascript", "lang-python",
+    "lang-go", "lang-rust", "lang-java",
+]
+grammar-all = [
+    "grammar-core",
+    "lang-c", "lang-cpp", "lang-ruby", "lang-csharp", "lang-php",
+    "lang-fortran", "lang-swift", "lang-elixir", "lang-bash", "lang-hcl",
+    "lang-kotlin", "lang-xml", "lang-dart", "lang-perl", "lang-ocaml",
+    "lang-scala", "lang-zig", "lang-nix",
+    "lang-svelte", "lang-erb",
+    "lang-haskell",
+    "lang-elm",
+    "lang-clojure",
+    "lang-edn",
+    "lang-d",
+    "lang-sql",
+    "lang-lua",
+    "lang-fish",
+    "lang-bsl",
+]
+
+# Individual grammar features
+lang-typescript = ["dep:tree-sitter-typescript"]
+lang-javascript = ["dep:tree-sitter-javascript"]
+lang-python = ["dep:tree-sitter-python"]
+lang-go = ["dep:tree-sitter-go"]
+lang-rust = ["dep:tree-sitter-rust"]
+lang-java = ["dep:tree-sitter-java"]
+lang-c = ["dep:tree-sitter-c"]
+lang-cpp = ["dep:tree-sitter-cpp"]
+lang-ruby = ["dep:tree-sitter-ruby"]
+lang-csharp = ["dep:tree-sitter-c-sharp"]
+lang-php = ["dep:tree-sitter-php"]
+lang-fortran = ["dep:tree-sitter-fortran"]
+lang-swift = ["dep:tree-sitter-swift"]
+lang-elixir = ["dep:tree-sitter-elixir"]
+lang-bash = ["dep:tree-sitter-bash"]
+lang-hcl = ["dep:tree-sitter-hcl"]
+lang-kotlin = ["dep:tree-sitter-kotlin-ng"]
+lang-xml = ["dep:tree-sitter-xml"]
+lang-dart = ["dep:tree-sitter-dart"]
+lang-perl = ["dep:ts-parser-perl"]
+lang-ocaml = ["dep:tree-sitter-ocaml"]
+lang-scala = ["dep:tree-sitter-scala"]
+lang-zig = ["dep:tree-sitter-zig"]
+lang-nix = ["dep:tree-sitter-nix"]
+lang-svelte = ["dep:tree-sitter-htmlx-svelte"]
+lang-erb = ["dep:tree-sitter-embedded-template"]
+lang-haskell = ["dep:tree-sitter-haskell"]
+lang-elm = ["dep:tree-sitter-elm"]
+lang-clojure = ["dep:tree-sitter-clojure-orchard"]
+lang-edn = ["dep:tree-sitter-clojure-orchard"]
+lang-d = ["dep:tree-sitter-d"]
+lang-sql = ["dep:tree-sitter-sequel"]
+lang-lua = ["dep:tree-sitter-lua"]
+lang-fish = ["dep:tree-sitter-fish"]
+lang-bsl = ["dep:tree-sitter-bsl"]
+
+[dependencies]
+git2 = { version = "0.20", optional = true, default-features = false }
+tree-sitter = "0.26"
+tree-sitter-typescript = { version = "0.23", optional = true }
+tree-sitter-javascript = { version = "0.23", optional = true }
+tree-sitter-python = { version = "0.23", optional = true }
+tree-sitter-go = { version = "0.23", optional = true }
+tree-sitter-rust = { version = "0.23", optional = true }
+tree-sitter-java = { version = "0.23", optional = true }
+tree-sitter-c = { version = "0.23", optional = true }
+tree-sitter-cpp = { version = "0.23", optional = true }
+tree-sitter-ruby = { version = "0.23", optional = true }
+tree-sitter-c-sharp = { version = "0.23", optional = true }
+tree-sitter-php = { version = "0.23", optional = true }
+tree-sitter-fortran = { version = "0.5", optional = true }
+tree-sitter-swift = { version = "0.7", optional = true }
+tree-sitter-elixir = { version = "0.3", optional = true }
+tree-sitter-bash = { version = "0.23", optional = true }
+tree-sitter-hcl = { version = "1.1", optional = true }
+tree-sitter-kotlin-ng = { version = "1.1", optional = true }
+tree-sitter-xml = { version = "0.7", optional = true }
+tree-sitter-embedded-template = { version = "0.25", optional = true }
+tree-sitter-ocaml = { version = "0.24", optional = true }
+tree-sitter-htmlx-svelte = { version = "0.1.7", optional = true }
+tree-sitter-dart = { version = "0.2.0", optional = true }
+# Official, actively-maintained Perl grammar (the -next crate was an
+# unattributed copy; this is a drop-in replacement, strictly newer). See #355.
+ts-parser-perl = { version = "1.1", optional = true }
+tree-sitter-scala = { version = "0.26", optional = true }
+# DerekStride/tree-sitter-sql, published as tree-sitter-sequel. See #339.
+tree-sitter-sequel = { version = "0.3", optional = true }
+serde = { version = "1", features = ["derive", "rc"] }
+serde_json = "1"
+serde_yaml = "0.9"
+toml = "0.8"
+xxhash-rust = { version = "0.8", features = ["xxh3"] }
+regex = "1"
+thiserror = "2"
+rayon = { version = "1.10", optional = true }
+tree-sitter-zig = { version = "1.1.2", optional = true }
+tree-sitter-nix = { version = "0.3", optional = true }
+tree-sitter-haskell = { version = "0.23", optional = true }
+tree-sitter-elm = { version = "5.9", optional = true }
+tree-sitter-clojure-orchard = { version = "0.2.5", optional = true }
+tree-sitter-d = { version = "0.8.2", optional = true }
+tree-sitter-lua = { version = "0.5.0", optional = true }
+tree-sitter-fish = { version = "3.6", optional = true }
+tree-sitter-bsl = { version = "0.1.7", optional = true }
+rustc-hash = "2"
+# On-disk persistence for the red-green facts layer (parser::facts_store).
+# Pure Rust, no C dependency (keeps the `wasm` feature viable). CBOR, not
+# bincode: `SemanticEntity` (persisted inside `FileFacts`) uses
+# `#[serde(skip_serializing_if = "Option::is_none")]` on several fields —
+# correct and cheap for the self-describing formats it already round-trips
+# through (`serde_json` elsewhere in this crate), but fatal for a
+# non-self-describing, positional format: skipping a field on write desyncs
+# a decoder that expects one value per declared field in sequence. A RED test
+# in facts_store.rs caught this against bincode directly (see its module doc);
+# CBOR is self-describing (field lookup by key, like JSON) so it round-trips
+# the same structs JSON already does, while still decoding decisively faster
+# than JSON's text parsing for the bulk-load access pattern this store has.
+ciborium = "0.2"
+
+# Zero-copy reads for the query index (`index::reader`). Pure Rust, no C
+# dependency — same constraint the facts layer's CBOR choice above answers to.
+# Optional, and the reader's `from_bytes` constructor works without it, so the
+# `wasm` feature keeps building.
+memmap2 = { version = "0.9", optional = true }
+
+# `disk-cache` feature: the unified `cache.db` layer, moved here
+# from `sem-cli`/`sem-mcp`, which both depended on this exact version+feature
+# pair already. `bundled` is a C dependency (compiles libsqlite3), so this
+# stays optional rather than joining `default`.
+rusqlite = { version = "0.32", features = ["bundled"], optional = true }
+# Entity content-store compression (`insert_entities_with_content_store`),
+# same version both consumer crates already pinned.
+zstd = { version = "0.13", optional = true }
+
+# oxc-fastpath spike. Pinned exact versions so the
+# equivalence-pinning tests aren't chasing a moving upstream AST.
+oxc_parser = { version = "=0.143.0", optional = true }
+oxc_ast = { version = "=0.143.0", optional = true }
+oxc_ast_visit = { version = "=0.143.0", optional = true }
+oxc_allocator = { version = "=0.143.0", optional = true }
+oxc_span = { version = "=0.143.0", optional = true }
+oxc_syntax = { version = "=0.143.0", optional = true }
+
+[dev-dependencies]
+tempfile = "3.24.0"
+ignore = "0.4"
+criterion = "0.5"
+# Benches are separate crates, so the profiling benches need their own handles
+# on the parse/hash primitives sem-core uses internally.
+tree-sitter = "0.26"
+xxhash-rust = { version = "0.8", features = ["xxh3"] }
+# Dev-only, used by `parse_probe`/`mul_census` to give
+# examples the same global allocator the production binaries (`sem`,
+# `sem-mcp`) install, so allocator-fragmentation effects measured there
+# reflect real behavior instead of macOS's system allocator ceiling. Not
+# proposed as sem-core's own allocator — that decision belongs to whichever
+# binary embeds this library.
+mimalloc = "0.1"
+# The multi-document YAML determinism witness needs to run the
+# same cold build under two differently-sized *scoped* rayon pools within
+# one test process (a real `RAYON_NUM_THREADS` env var only takes effect
+# once, at the global pool's first use, so it can't vary within a process).
+# `sem-core` already depends on `rayon` under the default `parallel`
+# feature; this is the same crate + version, just also reachable from an
+# integration test, which only sees `[dev-dependencies]`.
+rayon = "1.10"
+# Algebraic-extraction law witnesses (`tests/laws_extraction.rs`,
+# `tests/laws_diff.rs`): property-based tests over generated TS/Python/Rust/
+# JSON sources. `default-features = false, std` keeps the fork/persistence
+# machinery (rusty-fork, tempfile) out; laws here are pure functions of
+# in-memory strings, no process forking or regression-file persistence needed.
+proptest = { version = "1.11", default-features = false, features = ["std"] }
+
+[[bench]]
+name = "parse_profile"
+harness = false
+
+[[bench]]
+name = "incremental"
+harness = false
+
+# Replays real commits through the full `sem diff` pipeline twice (fast path
+# off vs on) and compares. Needs a git repository to read history from.
+[[example]]
+name = "diff_oracle"
+required-features = ["git"]

@@ -1,0 +1,17 @@
+import type { components } from './schema';
+export type Profile = components['schemas']['Profile'];
+export type Module = components['schemas']['Module'];
+export type ViewNode = components['schemas']['ViewNode'];
+export type GraphView = components['schemas']['GraphView'];
+export type GraphRequest = components['schemas']['GraphRequest'];
+export type SourceResponse = components['schemas']['SourceResponse'];
+export type SourceDiff = components['schemas']['SourceDiff'];
+export type Comparison = components['schemas']['Comparison'];
+export type Job = components['schemas']['Job'];
+export type ReadyOrJob = components['schemas']['ReadyOrJob'];
+export type BuildReceipt = components['schemas']['BuildReceipt'];
+export type Dependency = components['schemas']['Dependency'];
+export type EdgeChange = components['schemas']['EdgeChange'];
+export type Commit = { id: string; subject: string; author: string; time: number; parents: string[] };
+export type SnapshotInfo = { id: string; commit: string; profile: Profile; moduleCount: number; edgeCount: number; fileCount: number; analyzedFiles: number; kinds: Record<string, number>; diagnosticCount: number };
+export type Workspace = { repository: string; name: string; path: string; engine: string; initial: ReadyOrJob; defaultRevision: string; defaultProfile: Profile };

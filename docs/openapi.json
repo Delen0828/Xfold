@@ -1,0 +1,3417 @@
+{
+  "components": {
+    "schemas": {
+      "BuildReceipt": {
+        "properties": {
+          "engine": {
+            "type": "string"
+          },
+          "graphHash": {
+            "type": "string"
+          },
+          "inputHash": {
+            "type": "string"
+          },
+          "snapshotId": {
+            "type": "string"
+          },
+          "stats": {
+            "$ref": "#/components/schemas/BuildStats"
+          },
+          "topologyHash": {
+            "type": "string"
+          },
+          "validated": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "snapshotId",
+          "engine",
+          "inputHash",
+          "graphHash",
+          "topologyHash",
+          "validated",
+          "stats"
+        ],
+        "type": "object"
+      },
+      "BuildRequest": {
+        "properties": {
+          "force": {
+            "type": "boolean"
+          },
+          "profile": {
+            "$ref": "#/components/schemas/Profile"
+          },
+          "revision": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "revision"
+        ],
+        "type": "object"
+      },
+      "BuildStats": {
+        "properties": {
+          "artifactBytes": {
+            "minimum": 0,
+            "type": "integer"
+          },
+          "durationMs": {
+            "format": "int64",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "edgesRederived": {
+            "minimum": 0,
+            "type": "integer"
+          },
+          "edgesReused": {
+            "minimum": 0,
+            "type": "integer"
+          },
+          "filesChanged": {
+            "minimum": 0,
+            "type": "integer"
+          },
+          "filesDeleted": {
+            "minimum": 0,
+            "type": "integer"
+          },
+          "filesParsed": {
+            "minimum": 0,
+            "type": "integer"
+          },
+          "filesResolved": {
+            "minimum": 0,
+            "type": "integer"
+          },
+          "filesReused": {
+            "minimum": 0,
+            "type": "integer"
+          },
+          "mode": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "mode",
+          "durationMs",
+          "filesChanged",
+          "filesParsed",
+          "filesReused",
+          "filesResolved",
+          "filesDeleted",
+          "edgesReused",
+          "edgesRederived",
+          "artifactBytes"
+        ],
+        "type": "object"
+      },
+      "Change": {
+        "properties": {
+          "after": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "before": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "flags": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "headline": {
+            "type": "boolean"
+          },
+          "id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "flags",
+          "headline"
+        ],
+        "type": "object"
+      },
+      "CompareRequest": {
+        "properties": {
+          "base": {
+            "type": "string"
+          },
+          "profile": {
+            "$ref": "#/components/schemas/Profile"
+          },
+          "target": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "base",
+          "target"
+        ],
+        "type": "object"
+      },
+      "Comparison": {
+        "properties": {
+          "base": {
+            "type": "string"
+          },
+          "changes": {
+            "items": {
+              "$ref": "#/components/schemas/Change"
+            },
+            "type": "array"
+          },
+          "correspondence": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "propertyNames": {
+              "type": "string"
+            },
+            "type": "object"
+          },
+          "diagnostics": {
+            "items": {
+              "$ref": "#/components/schemas/Diagnostic"
+            },
+            "type": "array"
+          },
+          "edges": {
+            "items": {
+              "$ref": "#/components/schemas/EdgeChange"
+            },
+            "type": "array"
+          },
+          "id": {
+            "type": "string"
+          },
+          "summary": {
+            "additionalProperties": {
+              "minimum": 0,
+              "type": "integer"
+            },
+            "propertyNames": {
+              "type": "string"
+            },
+            "type": "object"
+          },
+          "target": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "base",
+          "target",
+          "correspondence",
+          "changes",
+          "edges",
+          "summary",
+          "diagnostics"
+        ],
+        "type": "object"
+      },
+      "Dependency": {
+        "properties": {
+          "from": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string"
+          },
+          "provenance": {
+            "type": "string"
+          },
+          "to": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "from",
+          "to",
+          "kind",
+          "provenance"
+        ],
+        "type": "object"
+      },
+      "Diagnostic": {
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "path": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "severity": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "severity",
+          "code",
+          "message"
+        ],
+        "type": "object"
+      },
+      "EdgeChange": {
+        "properties": {
+          "edge": {
+            "$ref": "#/components/schemas/Dependency"
+          },
+          "side": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "edge",
+          "status",
+          "side"
+        ],
+        "type": "object"
+      },
+      "FileRecord": {
+        "properties": {
+          "bytes": {
+            "minimum": 0,
+            "type": "integer"
+          },
+          "gitBlob": {
+            "type": "string"
+          },
+          "language": {
+            "type": "string"
+          },
+          "lines": {
+            "minimum": 0,
+            "type": "integer"
+          },
+          "object": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "path": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "path",
+          "gitBlob",
+          "language",
+          "status",
+          "bytes",
+          "lines"
+        ],
+        "type": "object"
+      },
+      "GraphRequest": {
+        "properties": {
+          "changes": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "comparison": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "edgeTypes": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "expanded": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "kinds": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "limit": {
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "scope": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "snapshot": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "type": "object"
+      },
+      "GraphView": {
+        "properties": {
+          "breadcrumbs": {
+            "items": {
+              "$ref": "#/components/schemas/Module"
+            },
+            "type": "array"
+          },
+          "comparison": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "edges": {
+            "items": {
+              "$ref": "#/components/schemas/ViewEdge"
+            },
+            "type": "array"
+          },
+          "id": {
+            "type": "string"
+          },
+          "layoutHash": {
+            "type": "string"
+          },
+          "nodes": {
+            "items": {
+              "$ref": "#/components/schemas/ViewNode"
+            },
+            "type": "array"
+          },
+          "omittedEdges": {
+            "minimum": 0,
+            "type": "integer"
+          },
+          "omittedNodes": {
+            "minimum": 0,
+            "type": "integer"
+          },
+          "scope": {
+            "type": "string"
+          },
+          "snapshot": {
+            "type": "string"
+          },
+          "truncated": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "snapshot",
+          "scope",
+          "breadcrumbs",
+          "nodes",
+          "edges",
+          "layoutHash",
+          "truncated",
+          "omittedNodes",
+          "omittedEdges"
+        ],
+        "type": "object"
+      },
+      "Job": {
+        "properties": {
+          "counters": {
+            "additionalProperties": {
+              "minimum": 0,
+              "type": "integer"
+            },
+            "propertyNames": {
+              "type": "string"
+            },
+            "type": "object"
+          },
+          "error": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "id": {
+            "type": "string"
+          },
+          "phase": {
+            "type": "string"
+          },
+          "resultId": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "resultKind": {
+            "type": "string"
+          },
+          "sequence": {
+            "format": "int64",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "state": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "state",
+          "phase",
+          "sequence",
+          "resultKind",
+          "counters"
+        ],
+        "type": "object"
+      },
+      "Module": {
+        "properties": {
+          "contentHash": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "kappa": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "kind": {
+            "type": "string"
+          },
+          "language": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "parent": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "path": {
+            "type": "string"
+          },
+          "qualifiedName": {
+            "type": "string"
+          },
+          "semId": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "source": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/SourceRef"
+              }
+            ]
+          },
+          "structuralHash": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "kind",
+          "name",
+          "qualifiedName",
+          "path",
+          "language",
+          "contentHash"
+        ],
+        "type": "object"
+      },
+      "PathRequest": {
+        "properties": {
+          "edgeTypes": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "from": {
+            "type": "string"
+          },
+          "snapshot": {
+            "type": "string"
+          },
+          "to": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "snapshot",
+          "from",
+          "to"
+        ],
+        "type": "object"
+      },
+      "Profile": {
+        "properties": {
+          "extensions": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "includeExcluded": {
+            "type": "boolean"
+          }
+        },
+        "type": "object"
+      },
+      "ReadyOrJob": {
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string"
+          },
+          "state": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "state",
+          "id",
+          "kind"
+        ],
+        "type": "object"
+      },
+      "Snapshot": {
+        "properties": {
+          "commit": {
+            "type": "string"
+          },
+          "configHash": {
+            "type": "string"
+          },
+          "dependencyFingerprint": {
+            "type": "string"
+          },
+          "diagnostics": {
+            "items": {
+              "$ref": "#/components/schemas/Diagnostic"
+            },
+            "type": "array"
+          },
+          "edges": {
+            "items": {
+              "$ref": "#/components/schemas/Dependency"
+            },
+            "type": "array"
+          },
+          "engine": {
+            "type": "string"
+          },
+          "files": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/FileRecord"
+            },
+            "propertyNames": {
+              "type": "string"
+            },
+            "type": "object"
+          },
+          "graphHash": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "modules": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/Module"
+            },
+            "propertyNames": {
+              "type": "string"
+            },
+            "type": "object"
+          },
+          "profile": {
+            "$ref": "#/components/schemas/Profile"
+          },
+          "repository": {
+            "type": "string"
+          },
+          "schemaVersion": {
+            "format": "int32",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "sourceHash": {
+            "type": "string"
+          },
+          "topologyHash": {
+            "type": "string"
+          },
+          "tree": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "schemaVersion",
+          "engine",
+          "repository",
+          "commit",
+          "tree",
+          "profile",
+          "configHash",
+          "sourceHash",
+          "graphHash",
+          "topologyHash",
+          "modules",
+          "edges",
+          "files",
+          "diagnostics"
+        ],
+        "type": "object"
+      },
+      "SourceDiff": {
+        "properties": {
+          "after": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/SourceResponse"
+              }
+            ]
+          },
+          "afterName": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "before": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/SourceResponse"
+              }
+            ]
+          },
+          "beforeName": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "comparison": {
+            "type": "string"
+          },
+          "flags": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "unified": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "comparison",
+          "unified",
+          "flags"
+        ],
+        "type": "object"
+      },
+      "SourceRef": {
+        "properties": {
+          "blob": {
+            "type": "string"
+          },
+          "endByte": {
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "endLine": {
+            "minimum": 0,
+            "type": "integer"
+          },
+          "path": {
+            "type": "string"
+          },
+          "startByte": {
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "startLine": {
+            "minimum": 0,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "path",
+          "blob",
+          "startLine",
+          "endLine"
+        ],
+        "type": "object"
+      },
+      "SourceResponse": {
+        "properties": {
+          "anchor": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/SourceRef"
+              }
+            ]
+          },
+          "blob": {
+            "type": "string"
+          },
+          "language": {
+            "type": "string"
+          },
+          "path": {
+            "type": "string"
+          },
+          "snapshot": {
+            "type": "string"
+          },
+          "text": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "snapshot",
+          "path",
+          "blob",
+          "language",
+          "text"
+        ],
+        "type": "object"
+      },
+      "TraverseRequest": {
+        "properties": {
+          "depth": {
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "direction": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "edgeTypes": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "limit": {
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "snapshot": {
+            "type": "string"
+          },
+          "start": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "snapshot",
+          "start"
+        ],
+        "type": "object"
+      },
+      "ViewEdge": {
+        "properties": {
+          "added": {
+            "minimum": 0,
+            "type": "integer"
+          },
+          "count": {
+            "minimum": 0,
+            "type": "integer"
+          },
+          "from": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string"
+          },
+          "relationships": {
+            "items": {
+              "$ref": "#/components/schemas/EdgeChange"
+            },
+            "type": "array"
+          },
+          "removed": {
+            "minimum": 0,
+            "type": "integer"
+          },
+          "to": {
+            "type": "string"
+          },
+          "unchanged": {
+            "minimum": 0,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "from",
+          "to",
+          "kind",
+          "count",
+          "added",
+          "removed",
+          "unchanged",
+          "relationships"
+        ],
+        "type": "object"
+      },
+      "ViewNode": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Module"
+          },
+          {
+            "properties": {
+              "before": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "boundary": {
+                "type": "boolean"
+              },
+              "changedDescendants": {
+                "minimum": 0,
+                "type": "integer"
+              },
+              "childCount": {
+                "minimum": 0,
+                "type": "integer"
+              },
+              "descendantCount": {
+                "minimum": 0,
+                "type": "integer"
+              },
+              "flags": {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "movedOut": {
+                "minimum": 0,
+                "type": "integer"
+              },
+              "side": {
+                "type": "string"
+              },
+              "snapshot": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "snapshot",
+              "side",
+              "flags",
+              "childCount",
+              "descendantCount",
+              "changedDescendants",
+              "movedOut",
+              "boundary"
+            ],
+            "type": "object"
+          }
+        ]
+      }
+    }
+  },
+  "info": {
+    "description": "Local semantic code graphs and commit comparisons",
+    "license": {
+      "identifier": "MIT",
+      "name": "MIT"
+    },
+    "title": "Xfold local API",
+    "version": "1.0.0"
+  },
+  "openapi": "3.1.0",
+  "paths": {
+    "/api/v1/commits": {
+      "get": {
+        "operationId": "commits",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "revision",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "parent",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "q",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "kind",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "language",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "path",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "module",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "minimum": 0,
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "minimum": 0,
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "line",
+            "required": false,
+            "schema": {
+              "minimum": 0,
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "byte",
+            "required": false,
+            "schema": {
+              "minimum": 0,
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Success"
+          },
+          "400": {
+            "description": "Invalid request or unavailable artifact"
+          }
+        }
+      }
+    },
+    "/api/v1/comparisons": {
+      "post": {
+        "operationId": "createComparison",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CompareRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReadyOrJob"
+                }
+              }
+            },
+            "description": "Success"
+          },
+          "400": {
+            "description": "Invalid request or unavailable artifact"
+          }
+        }
+      }
+    },
+    "/api/v1/comparisons/{id}": {
+      "get": {
+        "operationId": "comparison",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "revision",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "parent",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "q",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "kind",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "language",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "path",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "module",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "minimum": 0,
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "minimum": 0,
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "line",
+            "required": false,
+            "schema": {
+              "minimum": 0,
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "byte",
+            "required": false,
+            "schema": {
+              "minimum": 0,
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Comparison"
+                }
+              }
+            },
+            "description": "Success"
+          },
+          "400": {
+            "description": "Invalid request or unavailable artifact"
+          }
+        }
+      }
+    },
+    "/api/v1/comparisons/{id}/changes": {
+      "get": {
+        "operationId": "changes",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "revision",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "parent",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "q",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "kind",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "language",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "path",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "module",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "minimum": 0,
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "minimum": 0,
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "line",
+            "required": false,
+            "schema": {
+              "minimum": 0,
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "byte",
+            "required": false,
+            "schema": {
+              "minimum": 0,
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Success"
+          },
+          "400": {
+            "description": "Invalid request or unavailable artifact"
+          }
+        }
+      }
+    },
+    "/api/v1/comparisons/{id}/source-diff": {
+      "get": {
+        "operationId": "sourceDiff",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "revision",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "parent",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "q",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "kind",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "language",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "path",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "module",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "minimum": 0,
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "minimum": 0,
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "line",
+            "required": false,
+            "schema": {
+              "minimum": 0,
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "byte",
+            "required": false,
+            "schema": {
+              "minimum": 0,
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SourceDiff"
+                }
+              }
+            },
+            "description": "Success"
+          },
+          "400": {
+            "description": "Invalid request or unavailable artifact"
+          }
+        }
+      }
+    },
+    "/api/v1/graph-views": {
+      "post": {
+        "operationId": "graphView",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GraphRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GraphView"
+                }
+              }
+            },
+            "description": "Success"
+          },
+          "400": {
+            "description": "Invalid request or unavailable artifact"
+          }
+        }
+      }
+    },
+    "/api/v1/graph-views/{id}/edges/{edge}": {
+      "get": {
+        "operationId": "edge",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "edge",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "revision",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "parent",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "q",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "kind",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "language",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "path",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "module",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "minimum": 0,
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "minimum": 0,
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "line",
+            "required": false,
+            "schema": {
+              "minimum": 0,
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "byte",
+            "required": false,
+            "schema": {
+              "minimum": 0,
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Success"
+          },
+          "400": {
+            "description": "Invalid request or unavailable artifact"
+          }
+        }
+      }
+    },
+    "/api/v1/jobs/{id}": {
+      "get": {
+        "operationId": "job",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "revision",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "parent",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "q",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "kind",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "language",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "path",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "module",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "minimum": 0,
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "minimum": 0,
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "line",
+            "required": false,
+            "schema": {
+              "minimum": 0,
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "byte",
+            "required": false,
+            "schema": {
+              "minimum": 0,
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Job"
+                }
+              }
+            },
+            "description": "Success"
+          },
+          "400": {
+            "description": "Invalid request or unavailable artifact"
+          }
+        }
+      }
+    },
+    "/api/v1/jobs/{id}/cancel": {
+      "post": {
+        "operationId": "cancel",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Job"
+                }
+              }
+            },
+            "description": "Success"
+          },
+          "400": {
+            "description": "Invalid request or unavailable artifact"
+          }
+        }
+      }
+    },
+    "/api/v1/jobs/{id}/events": {
+      "get": {
+        "operationId": "events",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "revision",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "parent",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "q",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "kind",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "language",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "path",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "module",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "minimum": 0,
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "minimum": 0,
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "line",
+            "required": false,
+            "schema": {
+              "minimum": 0,
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "byte",
+            "required": false,
+            "schema": {
+              "minimum": 0,
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "text/event-stream": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "description": "Success"
+          },
+          "400": {
+            "description": "Invalid request or unavailable artifact"
+          }
+        }
+      }
+    },
+    "/api/v1/paths": {
+      "post": {
+        "operationId": "path",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PathRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Success"
+          },
+          "400": {
+            "description": "Invalid request or unavailable artifact"
+          }
+        }
+      }
+    },
+    "/api/v1/refs": {
+      "get": {
+        "operationId": "refs",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "revision",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "parent",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "q",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "kind",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "language",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "path",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "module",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "minimum": 0,
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "minimum": 0,
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "line",
+            "required": false,
+            "schema": {
+              "minimum": 0,
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "byte",
+            "required": false,
+            "schema": {
+              "minimum": 0,
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Success"
+          },
+          "400": {
+            "description": "Invalid request or unavailable artifact"
+          }
+        }
+      }
+    },
+    "/api/v1/snapshots": {
+      "post": {
+        "operationId": "createSnapshot",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BuildRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReadyOrJob"
+                }
+              }
+            },
+            "description": "Success"
+          },
+          "400": {
+            "description": "Invalid request or unavailable artifact"
+          }
+        }
+      }
+    },
+    "/api/v1/snapshots/{id}": {
+      "get": {
+        "operationId": "snapshot",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "revision",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "parent",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "q",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "kind",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "language",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "path",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "module",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "minimum": 0,
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "minimum": 0,
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "line",
+            "required": false,
+            "schema": {
+              "minimum": 0,
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "byte",
+            "required": false,
+            "schema": {
+              "minimum": 0,
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Success"
+          },
+          "400": {
+            "description": "Invalid request or unavailable artifact"
+          }
+        }
+      }
+    },
+    "/api/v1/snapshots/{id}/children": {
+      "get": {
+        "operationId": "children",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "revision",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "parent",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "q",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "kind",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "language",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "path",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "module",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "minimum": 0,
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "minimum": 0,
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "line",
+            "required": false,
+            "schema": {
+              "minimum": 0,
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "byte",
+            "required": false,
+            "schema": {
+              "minimum": 0,
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Success"
+          },
+          "400": {
+            "description": "Invalid request or unavailable artifact"
+          }
+        }
+      }
+    },
+    "/api/v1/snapshots/{id}/diagnostics": {
+      "get": {
+        "operationId": "diagnostics",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "revision",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "parent",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "q",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "kind",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "language",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "path",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "module",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "minimum": 0,
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "minimum": 0,
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "line",
+            "required": false,
+            "schema": {
+              "minimum": 0,
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "byte",
+            "required": false,
+            "schema": {
+              "minimum": 0,
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Success"
+          },
+          "400": {
+            "description": "Invalid request or unavailable artifact"
+          }
+        }
+      }
+    },
+    "/api/v1/snapshots/{id}/modules-at": {
+      "get": {
+        "operationId": "modulesAt",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "revision",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "parent",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "q",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "kind",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "language",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "path",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "module",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "minimum": 0,
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "minimum": 0,
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "line",
+            "required": false,
+            "schema": {
+              "minimum": 0,
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "byte",
+            "required": false,
+            "schema": {
+              "minimum": 0,
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Success"
+          },
+          "400": {
+            "description": "Invalid request or unavailable artifact"
+          }
+        }
+      }
+    },
+    "/api/v1/snapshots/{id}/modules/{module}": {
+      "get": {
+        "operationId": "module",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "module",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "revision",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "parent",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "q",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "kind",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "language",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "path",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "module",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "minimum": 0,
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "minimum": 0,
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "line",
+            "required": false,
+            "schema": {
+              "minimum": 0,
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "byte",
+            "required": false,
+            "schema": {
+              "minimum": 0,
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Success"
+          },
+          "400": {
+            "description": "Invalid request or unavailable artifact"
+          }
+        }
+      }
+    },
+    "/api/v1/snapshots/{id}/receipt": {
+      "get": {
+        "operationId": "receipt",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "revision",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "parent",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "q",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "kind",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "language",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "path",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "module",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "minimum": 0,
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "minimum": 0,
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "line",
+            "required": false,
+            "schema": {
+              "minimum": 0,
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "byte",
+            "required": false,
+            "schema": {
+              "minimum": 0,
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BuildReceipt"
+                }
+              }
+            },
+            "description": "Success"
+          },
+          "400": {
+            "description": "Invalid request or unavailable artifact"
+          }
+        }
+      }
+    },
+    "/api/v1/snapshots/{id}/search": {
+      "get": {
+        "operationId": "search",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "revision",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "parent",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "q",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "kind",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "language",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "path",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "module",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "minimum": 0,
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "minimum": 0,
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "line",
+            "required": false,
+            "schema": {
+              "minimum": 0,
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "byte",
+            "required": false,
+            "schema": {
+              "minimum": 0,
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Success"
+          },
+          "400": {
+            "description": "Invalid request or unavailable artifact"
+          }
+        }
+      }
+    },
+    "/api/v1/snapshots/{id}/source": {
+      "get": {
+        "operationId": "source",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "revision",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "parent",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "q",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "kind",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "language",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "path",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "module",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "minimum": 0,
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "minimum": 0,
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "line",
+            "required": false,
+            "schema": {
+              "minimum": 0,
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "byte",
+            "required": false,
+            "schema": {
+              "minimum": 0,
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SourceResponse"
+                }
+              }
+            },
+            "description": "Success"
+          },
+          "400": {
+            "description": "Invalid request or unavailable artifact"
+          }
+        }
+      }
+    },
+    "/api/v1/traversals": {
+      "post": {
+        "operationId": "traversal",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TraverseRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Success"
+          },
+          "400": {
+            "description": "Invalid request or unavailable artifact"
+          }
+        }
+      }
+    },
+    "/api/v1/workspace": {
+      "get": {
+        "operationId": "workspace",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "revision",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "parent",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "q",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "kind",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "language",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "path",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "module",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "minimum": 0,
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "minimum": 0,
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "line",
+            "required": false,
+            "schema": {
+              "minimum": 0,
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "byte",
+            "required": false,
+            "schema": {
+              "minimum": 0,
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Success"
+          },
+          "400": {
+            "description": "Invalid request or unavailable artifact"
+          }
+        }
+      }
+    }
+  }
+}

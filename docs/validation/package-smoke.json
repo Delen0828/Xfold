@@ -1,0 +1,48 @@
+{
+  "platform": "darwin-arm64",
+  "node": "v26.8.1",
+  "tarball": "/Users/shu343/Documents/Code Lab/CodeVis/Xfold/artifacts/xfold-cli-0.1.0.tgz",
+  "offlineInstall": true,
+  "emptyPathRuntime": true,
+  "cold": {
+    "snapshotId": "0d70a47b6100f776b4167ae0d25c6b1d6c8eccc7bc891dade848ac64906bd082",
+    "engine": "xfold-1/sem-e830de88ee2267c3d93342cc367d00734d376a12",
+    "inputHash": "48412a832928e9dce96d5da517443f768da2dbb3a847094e8e12c4b3761cc0c8",
+    "graphHash": "0b5f36bf3bf18f313f327cd26189db519df0c5ccc6a5c6d2ffc33c607858e3b2",
+    "topologyHash": "ae58e773a7cdb9b6e1b0931e7326872995df3ff7713f7b73ef950e45135c9a76",
+    "validated": true,
+    "stats": {
+      "mode": "cold",
+      "durationMs": 49,
+      "filesChanged": 5,
+      "filesParsed": 5,
+      "filesReused": 0,
+      "filesResolved": 5,
+      "filesDeleted": 0,
+      "edgesReused": 0,
+      "edgesRederived": 2,
+      "artifactBytes": 8510
+    }
+  },
+  "cached": {
+    "snapshotId": "0d70a47b6100f776b4167ae0d25c6b1d6c8eccc7bc891dade848ac64906bd082",
+    "engine": "xfold-1/sem-e830de88ee2267c3d93342cc367d00734d376a12",
+    "inputHash": "48412a832928e9dce96d5da517443f768da2dbb3a847094e8e12c4b3761cc0c8",
+    "graphHash": "0b5f36bf3bf18f313f327cd26189db519df0c5ccc6a5c6d2ffc33c607858e3b2",
+    "topologyHash": "ae58e773a7cdb9b6e1b0931e7326872995df3ff7713f7b73ef950e45135c9a76",
+    "validated": true,
+    "stats": {
+      "mode": "cache-hit",
+      "durationMs": 3,
+      "filesChanged": 0,
+      "filesParsed": 0,
+      "filesReused": 0,
+      "filesResolved": 0,
+      "filesDeleted": 0,
+      "edgesReused": 0,
+      "edgesRederived": 0,
+      "artifactBytes": 0
+    }
+  },
+  "ok": true
+}

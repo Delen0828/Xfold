@@ -1,0 +1,10 @@
+{
+  "repository": "matplotlib/matplotlib",
+  "pairs": [
+    { "name": "stackplot", "base": "14c96b510ebeba40f573e512299b1976f35b620e", "target": "d671446d82b085e7a16e9cdf4f2cff80eda2e2d2" },
+    { "name": "colormap", "base": "139c04587980436c8fa96e6724ca3c150741ab70", "target": "63c97a29c95c1c85de249afca4e8915b9fa24d1a" },
+    { "name": "antialiasing", "base": "26224d96066b5c60882296c551f54ca7732c0af0", "target": "74c0cd0c1363f39076e0a65c9492f1275c24d8cf" }
+  ],
+  "sequence": { "end": "d671446d82b085e7a16e9cdf4f2cff80eda2e2d2", "transitions": 14 },
+  "synthetic": { "pattern": "matplotlib*/case.json", "expectedCount": 34, "includeTestPatch": true }
+}

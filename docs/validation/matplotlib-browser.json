@@ -1,0 +1,87 @@
+{
+  "platform": "darwin-arm64",
+  "cpu": "Apple M3 Pro",
+  "memoryBytes": 19327352832,
+  "pair": {
+    "name": "stackplot",
+    "base": "14c96b510ebeba40f573e512299b1976f35b620e",
+    "target": "d671446d82b085e7a16e9cdf4f2cff80eda2e2d2"
+  },
+  "measurements": {
+    "initialBuildAndComparisonMs": 0,
+    "comparisonLoadMs": 315,
+    "searchMs": 977,
+    "fileGraphViewMs": 1187,
+    "sourceDiffMs": 4,
+    "browserOverviewReadyMs": 1035,
+    "selectionToSourceMs": 227,
+    "nextScopeGraphViewMs": 134,
+    "warmGraphViewMs": 2,
+    "warmSourceDiffMs": 2
+  },
+  "errors": [],
+  "remoteRequests": [],
+  "snapshot": {
+    "analyzedFiles": 1799,
+    "commit": "d671446d82b085e7a16e9cdf4f2cff80eda2e2d2",
+    "dependencyFingerprint": "6aecd93e1ad13304ef82cf27e5f911719b509e5cb885e2b2ccf4c56c88006ceb",
+    "diagnosticCount": 2732,
+    "edgeCount": 47737,
+    "engine": "xfold-1/sem-e830de88ee2267c3d93342cc367d00734d376a12",
+    "fileCount": 4360,
+    "graphHash": "84be2b557f11eaf72cded4bebcde8fc814841a1e344a07dbec2fa17d53e4717d",
+    "id": "7a7278bb8af734831216f770bc4114aed0d1830515022502ebf6bb6578bbf5bc",
+    "kinds": {
+      "array": 289,
+      "chunk": 2,
+      "class": 1074,
+      "directory": 194,
+      "element": 92625,
+      "enum": 117,
+      "file": 4360,
+      "function": 12585,
+      "heading": 16,
+      "module": 43,
+      "object": 17,
+      "preamble": 1,
+      "property": 13,
+      "repository": 1,
+      "row": 642,
+      "section": 5,
+      "struct": 74,
+      "template": 2,
+      "type": 1057,
+      "variable": 1421
+    },
+    "moduleCount": 114538,
+    "profile": {
+      "extensions": [],
+      "includeExcluded": false
+    },
+    "topologyHash": "ef17aec347b9a4076b24eef281f4805acbed01e4ac825c34f58fbb468780f593",
+    "tree": "428f44d07a4b0301f88984e35ee2ca66badfcc6e"
+  },
+  "receipt": {
+    "snapshotId": "7a7278bb8af734831216f770bc4114aed0d1830515022502ebf6bb6578bbf5bc",
+    "engine": "xfold-1/sem-e830de88ee2267c3d93342cc367d00734d376a12",
+    "inputHash": "75031fc0abb65b0361de9990cb411849b68ebfc3de399244421e5252d2b7957b",
+    "graphHash": "84be2b557f11eaf72cded4bebcde8fc814841a1e344a07dbec2fa17d53e4717d",
+    "topologyHash": "ef17aec347b9a4076b24eef281f4805acbed01e4ac825c34f58fbb468780f593",
+    "validated": true,
+    "stats": {
+      "mode": "incremental",
+      "durationMs": 7253,
+      "filesChanged": 2,
+      "filesParsed": 2,
+      "filesReused": 958,
+      "filesResolved": 841,
+      "filesDeleted": 0,
+      "edgesReused": 13745,
+      "edgesRederived": 37141,
+      "artifactBytes": 111435254
+    }
+  },
+  "browser": "154.0.8037.58",
+  "deepLink": "#commit=d671446d82b085e7a16e9cdf4f2cff80eda2e2d2&base=14c96b510ebeba40f573e512299b1976f35b620e&node=m-c40031f3091c79b82752c45ce9f16579&scope=f-07917398382925aab7841438c7851a43",
+  "ok": true
+}

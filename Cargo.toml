@@ -1,0 +1,36 @@
+[package]
+name = "xfold"
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+description = "Local semantic code graphs and commit comparisons"
+
+[dependencies]
+sem-core = { path = "vendor/sem-core" }
+anyhow = "1"
+axum = "0.8"
+tokio = { version = "1", features = ["full"] }
+tokio-stream = { version = "0.1", features = ["sync"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+sha2 = "0.10"
+git2 = { version = "0.20", default-features = false, features = ["vendored-libgit2"] }
+rusqlite = { version = "0.32", features = ["bundled"] }
+clap = { version = "4", features = ["derive"] }
+directories = "6"
+include_dir = "0.7"
+mime_guess = "2"
+ignore = "0.4"
+similar = "2"
+utoipa = { version = "5", features = ["axum_extras"] }
+fs2 = "0.4"
+
+[dev-dependencies]
+tempfile = "3"
+
+[profile.release]
+opt-level = 3
+strip = true
+
+[workspace]
+members = ["."]

@@ -1,0 +1,34 @@
+/node_modules/
+/target/
+/native/
+/artifacts/
+/web/dist/
+/test-results/
+/playwright-report/
+/.cache/
+*.tgz
+/.npm-cache/
+/.tools/
+
+# Generated dependency notices are recreated by npm run licenses.
+/licenses/
+
+# Local environments, editor files, and temporary output.
+.DS_Store
+.env
+.env.*
+!.env.example
+.venv/
+__pycache__/
+*.py[cod]
+*.tsbuildinfo
+*.log
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+/tmp/
+/temp/
+/.idea/
+/.vscode/

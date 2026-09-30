@@ -147,6 +147,7 @@
       "CompareRequest": {
         "properties": {
           "base": {
+            "description": "Empty means the target commit’s first parent (or an empty tree for a root commit).",
             "type": "string"
           },
           "profile": {
@@ -157,7 +158,6 @@
           }
         },
         "required": [
-          "base",
           "target"
         ],
         "type": "object"
@@ -364,6 +364,10 @@
               "type": "string"
             },
             "type": "array"
+          },
+          "light": {
+            "description": "Restrict the projection to semantic changes, ancestors, and direct children.",
+            "type": "boolean"
           },
           "limit": {
             "minimum": 0,

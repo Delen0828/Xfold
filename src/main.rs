@@ -123,29 +123,29 @@ async fn run() -> Result<()> {
     };
     let coordinator = jobs::Coordinator::new(repo::repository_path(&cli.repository)?, store);
     let ui_profile = profile.clone();
-    let initial = if let Some(base) = cli.from {
-        coordinator
-            .comparison(CompareRequest {
-                base,
-                target: cli.to.unwrap_or(cli.revision),
-                profile,
-            })
-            .await?
-    } else {
-        coordinator
-            .snapshot(BuildRequest {
-                revision: cli.to.unwrap_or(cli.revision),
-                profile,
-                force: false,
-            })
-            .await?
-    };
+    let target = default.clone();
+    let compare_range = cli.from.is_some();
+    let base = cli.from.unwrap_or_default();
+    let initial = coordinator
+        .comparison(CompareRequest {
+            base,
+            target,
+            profile,
+        })
+        .await?;
     let listener = tokio::net::TcpListener::bind((std::net::Ipv4Addr::LOCALHOST, cli.port))
         .await
         .context("Cannot bind the loopback server")?;
     let host = listener.local_addr()?.to_string();
     let url = format!("http://{host}");
-    let state = api::AppState::new(coordinator, initial, default, host, ui_profile);
+    let state = api::AppState::new(
+        coordinator,
+        initial,
+        default,
+        host,
+        ui_profile,
+        compare_range,
+    );
     println!("Xfold is serving {url}");
     if !cli.no_open {
         open_browser(&url);

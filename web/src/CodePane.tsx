@@ -2,8 +2,9 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import * as monaco from 'monaco-editor/esm/vs/editor/editor.api.js';
 import './languages';
 import EditorWorker from 'monaco-editor/esm/vs/editor/editor.worker?worker';
-import type { SourceDiff, SourceResponse, ViewNode } from './types';
+import type { Comparison, Module, SourceDiff, SourceResponse, ViewNode } from './types';
 import { palette } from './palette';
+import { SemanticChanges } from './SemanticChanges';
 // The local ESM editor never calls a CDN or loads a language service remotely.
 self.MonacoEnvironment = { getWorker: () => new EditorWorker() };
 // Monaco contributions cancel pending link/hover requests when their editor is
@@ -42,8 +43,8 @@ function CommittedEditor({ before, after, compare, options, theme, mount, mountD
   return <div ref={host} style={{ height: '100%', width: '100%' }}/>;
 }
 
-type Props = { selected: ViewNode | null; source: SourceResponse | null; diff: SourceDiff | null; loading: boolean; theme: string; onPosition: (source: SourceResponse, line: number, byte: number) => void; onExpand: () => void; onDiffLayout: (expanded: boolean) => void };
-export function CodePane({ selected, source, diff, loading, theme, onPosition, onExpand, onDiffLayout }: Props) {
+type Props = { comparison: Comparison | null; onChangeSelect: (module: Module, side: string) => void; selected: ViewNode | null; source: SourceResponse | null; diff: SourceDiff | null; loading: boolean; theme: string; onPosition: (source: SourceResponse, line: number, byte: number) => void; onExpand: () => void; onDiffLayout: (expanded: boolean) => void };
+export function CodePane({ comparison, onChangeSelect, selected, source, diff, loading, theme, onPosition, onExpand, onDiffLayout }: Props) {
   const [tab, setTab] = useState<'diff' | 'before' | 'after'>('diff');
   const [sideBySide, setSideBySide] = useState(false);
   const editor = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
@@ -85,9 +86,11 @@ export function CodePane({ selected, source, diff, loading, theme, onPosition, o
     navigateFrom(e, () => activeRef.current);
     e.onDidDispose(() => { if (editor.current === e) editor.current = null; });
   };
-  return <section className="code-pane" aria-label="Source code">
-    <header className="pane-title"><span className="eyebrow">SOURCE</span><span className="readonly"><i/> Read only</span><button className="icon-button" onClick={() => { setSideBySide(!sideBySide); onDiffLayout(!sideBySide); }} title="Toggle side-by-side source diff" aria-label="Toggle side-by-side source diff">◫</button></header>
-    {!selected ? <div className="empty-source"><div className="source-mark">{'{ }'}</div><h2>Follow the code.</h2><p>Select a module to see its source.<br/>Every line belongs to the selected commit.</p><div className="key-hint"><kbd>/</kbd> find a module</div></div> : <>
+  return <section className="code-pane" aria-label="Git change manager">
+    <SemanticChanges key={comparison?.id || "pending"} comparison={comparison} selected={selected?.id} onSelect={onChangeSelect}/>
+    <section className="related-code" aria-label="Related code change">
+    <header className="pane-title"><span className="eyebrow">RELATED CODE CHANGE</span><span className="readonly"><i/> Read only</span><button className="icon-button" onClick={() => { setSideBySide(!sideBySide); onDiffLayout(!sideBySide); }} title="Toggle side-by-side source diff" aria-label="Toggle side-by-side source diff">◫</button></header>
+    {!selected ? <div className="empty-source"><div className="source-mark">{'{ }'}</div><h2>Review a change.</h2><p>Select a semantic change above or a graph module.<br/>Its committed code diff appears here.</p><div className="key-hint"><kbd>/</kbd> find a module</div></div> : <>
       <div className="source-heading"><div className="eyebrow">{selected.kind}</div><h2 title={selected.name}>{selected.name}</h2><div className="source-path" title={selected.path}>{selected.path || 'Repository overview'}</div><div className="source-badges">{selected.flags.filter(f => f !== 'location').map(f => <span key={f} style={{ color: palette[f]?.color }}>{palette[f]?.symbol} {palette[f]?.label || f}</span>)}</div></div>
       {diff?.before && (diff.before.path !== diff.after?.path || diff.beforeName !== diff.afterName) && diff.after && <div className="previous-source">Previously <strong>{diff.beforeName}</strong><br/>{diff.before.path} · L{diff.before.anchor?.startLine || 1}</div>}
       {diff && <div className="source-tabs" role="tablist">{(['diff', 'before', 'after'] as const).map(t => <button key={t} role="tab" aria-selected={tab === t} onClick={() => setTab(t)}>{t === 'diff' ? 'Changes' : t === 'before' ? 'Before' : 'After'}</button>)}</div>}
@@ -99,5 +102,6 @@ export function CodePane({ selected, source, diff, loading, theme, onPosition, o
       </div>
       <footer className="source-footer"><span>Git snapshot · UTF-8</span><span>⌘ / Ctrl + click to focus entity</span></footer>
     </>}
+    </section>
   </section>;
 }

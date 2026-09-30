@@ -29,6 +29,7 @@ pub struct AppState {
     pub default_revision: String,
     pub host: String,
     pub profile: Profile,
+    pub compare_range: bool,
     snapshots: Mutex<BTreeMap<String, Arc<Snapshot>>>,
     views: Mutex<BTreeMap<String, GraphView>>,
     projections: Mutex<BTreeMap<String, Arc<query::ProjectionIndex>>>,
@@ -41,6 +42,7 @@ impl AppState {
         default_revision: String,
         host: String,
         profile: Profile,
+        compare_range: bool,
     ) -> Arc<Self> {
         Arc::new(Self {
             coordinator,
@@ -48,6 +50,7 @@ impl AppState {
             default_revision,
             host,
             profile,
+            compare_range,
             comparisons: Mutex::new(BTreeMap::new()),
             snapshots: Mutex::new(BTreeMap::new()),
             views: Mutex::new(BTreeMap::new()),
@@ -200,7 +203,7 @@ async fn workspace(State(s): State<Arc<AppState>>) -> ApiResult<Value> {
     let mut extensions = registry.registered_extensions();
     extensions.sort();
     Ok(Json(
-        json!({"repository":repo::identity(&git),"name":git.workdir().unwrap_or(git.path()).file_name().unwrap_or_default().to_string_lossy().trim_end_matches(".git"),"path":s.coordinator.repository,"engine":ENGINE,"initial":s.initial,"defaultRevision":s.default_revision,"defaultProfile":s.profile,"snapshots":s.coordinator.store.list()?,"capabilities":{"extensions":extensions,"edgeTypes":["calls","typeref","imports"],"callSitePrecision":"unavailable","revisions":"commits-only","editable":false}}),
+        json!({"repository":repo::identity(&git),"name":git.workdir().unwrap_or(git.path()).file_name().unwrap_or_default().to_string_lossy().trim_end_matches(".git"),"path":s.coordinator.repository,"engine":ENGINE,"initial":s.initial,"defaultRevision":s.default_revision,"compareRange":s.compare_range,"defaultProfile":s.profile,"snapshots":s.coordinator.store.list()?,"capabilities":{"extensions":extensions,"edgeTypes":["calls","typeref","imports"],"callSitePrecision":"unavailable","revisions":"commits-only","editable":false}}),
     ))
 }
 #[derive(Deserialize, Default)]
@@ -565,13 +568,29 @@ async fn changes(
     Query(p): Query<Params>,
 ) -> ApiResult<Value> {
     let c = s.comparison(&id)?;
-    let all: Vec<_> = c
-        .changes
+    let target = s.snapshot(&c.target)?;
+    let base = s.snapshot(&c.base)?;
+    let all: Vec<_> = query::change_seeds(&c, &target, &base)
+        .into_iter()
+        .filter(|c| p.status.as_ref().is_none_or(|f| c.flags.contains(f)))
+        .collect();
+    let items: Vec<_> = all
         .iter()
-        .filter(|c| !c.flags.is_empty() && p.status.as_ref().is_none_or(|f| c.flags.contains(f)))
+        .skip(p.offset())
+        .take(p.limit())
+        .map(|change| {
+            let module = change
+                .after
+                .as_ref()
+                .and_then(|id| target.modules.get(id))
+                .or_else(|| change.before.as_ref().and_then(|id| base.modules.get(id)));
+            let mut value = json!(change);
+            value["module"] = json!(module);
+            value
+        })
         .collect();
     Ok(Json(
-        json!({"comparison":id,"summary":c.summary,"items":all.iter().skip(p.offset()).take(p.limit()).collect::<Vec<_>>(),"total":all.len()}),
+        json!({"comparison":id,"summary":c.summary,"items":items,"total":all.len()}),
     ))
 }
 async fn source_diff(

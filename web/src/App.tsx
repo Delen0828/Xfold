@@ -1,7 +1,7 @@
 import { memo, useCallback, useEffect, useRef, useState } from 'react';
 import { Background, BackgroundVariant, Controls, Handle, MiniMap, Position, ReactFlow, useReactFlow, type Node, type NodeProps, type Edge, type Viewport } from '@xyflow/react';
 import { api, params } from './client';
-import { createSnapshot, createComparison } from './generated-client';
+import { createComparison } from './generated-client';
 import { CodePane } from './CodePane';
 import { palette, primaryFlag } from './palette';
 import type { BuildReceipt, Commit, Comparison, EdgeChange, GraphView, Job, Module, ReadyOrJob, SnapshotInfo, SourceDiff, SourceResponse, ViewNode, Workspace } from './types';
@@ -14,11 +14,15 @@ const SemanticNode = memo(({ data, selected }: NodeProps<ModuleNode>) => {
     <Handle type="target" position={Position.Left}/><Handle type="source" position={Position.Right}/>
     <div className="node-top"><span className={`node-icon ${data.semId ? 'entity' : ''}`}>{data.kind === 'directory' ? '▱' : data.kind === 'file' ? '≡' : data.kind === 'class' ? 'C' : 'ƒ'}</span><span className="node-kind">{data.kind}</span>{data.boundary && <span className="node-outside">↗</span>}{flag && <span className="node-status" title={data.flags.join(', ')}>{palette[flag].symbol} {palette[flag].label}</span>}</div>
     <div className="node-name">{data.name}</div>
-    <div className="node-bottom"><span>{data.childCount ? `${data.childCount} children` : data.source ? `L${data.source.startLine}–${data.source.endLine}` : data.path.split('/').slice(0, -1).join('/') || 'container'}{data.changedDescendants > 0 && <b> · {data.changedDescendants} changed</b>}{data.movedOut > 0 && <b> · {data.movedOut} moved out</b>}</span>{data.childCount > 0 && <span className="node-actions"><button className="nodrag" aria-label={`${data.expanded ? 'Collapse' : 'Expand'} ${data.name}`} onClick={e => { e.stopPropagation(); data.onToggle(data.id); }}>{data.expanded ? '−' : '+'}</button><button className="nodrag" aria-label={`Enter ${data.name}`} onClick={e => { e.stopPropagation(); data.onEnter(data); }}>↗</button></span>}</div>
+    <div className="node-bottom"><span>{data.childCount ? `${data.childCount} children` : data.source ? `L${data.source.startLine}–${data.source.endLine}` : data.path.split('/').slice(0, -1).join('/') || 'container'}{data.changedDescendants > 0 && <b> · {data.changedDescendants} changed</b>}{data.movedOut > 0 && <b> · {data.movedOut} moved out</b>}</span>{data.childCount > 0 && <span className="node-actions"><button className="nodrag" aria-label={`Enter ${data.name}`} onClick={e => { e.stopPropagation(); data.onEnter(data); }}>↗</button></span>}</div>
   </div>;
 });
 const nodeTypes = { module: SemanticNode };
 const empty = <span>—</span>;
+const hierarchyEdges = (v: GraphView) => {
+  const ids = new Set(v.nodes.map(n => n.id));
+  return v.nodes.filter(n => n.parent && ids.has(n.parent)).map(n => ({ id: `hierarchy:${n.id}`, from: n.parent!, to: n.id }));
+};
 
 export function App() {
   const flow = useReactFlow<ModuleNode>();
@@ -84,7 +88,7 @@ export function App() {
       const c = artifactKind === 'comparison' ? await api<Comparison>(`/comparisons/${id}`) : null;
       const [next, base] = await Promise.all([api<SnapshotInfo>(`/snapshots/${c?.target || id}`), c ? api<SnapshotInfo>(`/snapshots/${c.base}`) : Promise.resolve(null)]);
       if (sequence !== loadSequence.current) return;
-      setComparison(c); setCompareEnabled(!!c); setSnapshot(next); setSelected(null); setInspector(null); setHighlightIds(new Set()); setExpanded([]); setScope(pendingScope.current || 'root'); pendingScope.current = null;
+      setComparison(c); setSnapshot(next); setSelected(null); setInspector(null); setHighlightIds(new Set()); setExpanded([]); setScope(pendingScope.current || 'root'); pendingScope.current = null;
       setPendingJob(null); setJob(null); setTargetRef(next.commit);
       setBaseCommit(base?.commit || ''); if (base) setBaseRef(base.commit);
       api<BuildReceipt>(`/snapshots/${next.id}/receipt`).then(r => { if (sequence === loadSequence.current) setReceipt(r); }).catch(showError);
@@ -100,7 +104,8 @@ export function App() {
       const hash = new URLSearchParams(location.hash.slice(1));
       reveal.current = hash.get('node'); pendingScope.current = hash.get('scope');
       const target = hash.get('commit'); const base = hash.get('base');
-      if (target) { setTargetRef(target); if (base) { setBaseRef(base); accept(await api<ReadyOrJob>('/comparisons', { base, target, profile: w.defaultProfile })); } else accept(await api<ReadyOrJob>('/snapshots', { revision: target, profile: w.defaultProfile })); }
+      setCompareEnabled(target ? !!base : w.compareRange);
+      if (target) { setTargetRef(target); if (base) { setBaseRef(base); accept(await api<ReadyOrJob>('/comparisons', { base, target, profile: w.defaultProfile })); } else accept(await api<ReadyOrJob>('/comparisons', { base: '', target, profile: w.defaultProfile })); }
       else accept(w.initial);
       const history = await api<{ items: Commit[]; nextOffset: number | null }>(`/commits?${params({ revision: w.defaultRevision, limit: 30 })}`); setCommits(history.items); setHistoryOffset(history.nextOffset);
     }).catch(showError);
@@ -151,21 +156,36 @@ export function App() {
     const retained = new Set(nextNodes.map(n => n.id));
     setNodes(old => [...nextNodes, ...(motionRef.current ? old.filter(n => !retained.has(n.id)).map(n => ({ ...n, selected: false, selectable: false, focusable: false, style: { opacity: 0, pointerEvents: 'none' as const } })) : [])]);
     if (motionRef.current) exitTimer.current = setTimeout(() => setNodes(ns => ns.filter(n => retained.has(n.id))), 180);
-    setEdges(v.edges.map(e => ({ id: e.id, source: e.from, target: e.to, type: 'smoothstep', label: `${e.kind}${e.count > 1 ? ` ×${e.count}` : ''}${e.added ? ` +${e.added}` : ''}${e.removed ? ` −${e.removed}` : ''}`, animated: false, style: { stroke: e.removed && !e.added && !e.unchanged ? palette.deleted.color : e.added && !e.removed && !e.unchanged ? palette.added.color : e.added || e.removed ? palette.modified.color : '#526277', strokeWidth: e.added || e.removed ? 1.8 : 1.2, strokeDasharray: e.removed && !e.added && !e.unchanged ? '5 4' : undefined }, markerEnd: { type: 'arrowclosed' as never, color: e.removed && !e.added ? palette.deleted.color : '#798ca6', width: 16, height: 16 }, labelStyle: { fill: '#a2adc0', fontSize: 10 }, labelBgStyle: { fill: '#111923', fillOpacity: 0.95 }, labelBgPadding: [6, 3] })));
+    setEdges([...v.edges.map(e => ({ id: e.id, source: e.from, target: e.to, type: 'smoothstep', label: `${e.kind}${e.count > 1 ? ` ×${e.count}` : ''}${e.added ? ` +${e.added}` : ''}${e.removed ? ` −${e.removed}` : ''}`, animated: false, style: { stroke: e.removed && !e.added && !e.unchanged ? palette.deleted.color : e.added && !e.removed && !e.unchanged ? palette.added.color : e.added || e.removed ? palette.modified.color : '#526277', strokeWidth: e.added || e.removed ? 1.8 : 1.2, strokeDasharray: e.removed && !e.added && !e.unchanged ? '5 4' : undefined }, markerEnd: { type: 'arrowclosed' as never, color: e.removed && !e.added ? palette.deleted.color : '#798ca6', width: 16, height: 16 }, labelStyle: { fill: '#a2adc0', fontSize: 10 }, labelBgStyle: { fill: '#111923', fillOpacity: 0.95 }, labelBgPadding: [6, 3] as [number, number] })), ...hierarchyEdges(v).map(e => ({ id: e.id, source: e.from, target: e.to, type: 'smoothstep', label: 'contains', style: { stroke: '#526277', strokeDasharray: '3 5', opacity: .65 }, labelStyle: { fill: '#798ca6', fontSize: 9 }, labelBgStyle: { fill: '#111923', fillOpacity: .95 } }))]);
     if (fit) requestAnimationFrame(() => requestAnimationFrame(() => { const saved = localStorage.getItem(`xfold.camera.${workspace?.repository}.${v.scope}`); if (saved) { try { void flow.setViewport(JSON.parse(saved), { duration: 0 }); } catch { void flow.fitView({ padding: .2, duration: 0 }); } } else void flow.fitView({ padding: .2, duration: 0 }); }));
-    if (reveal.current) { const node = v.nodes.find(n => n.id === reveal.current); if (node) { setSelected(node); reveal.current = null; } }
-  }, [enter, toggle, expanded, flow, workspace?.repository]);
+    if (reveal.current) {
+      const id = reveal.current; reveal.current = null;
+      const node = v.nodes.find(n => n.id === id);
+      if (node) setSelected(node);
+      else {
+        // Review links can point beyond the display budget or to inspected context.
+        const change = comparison?.changes.find(c => c.id === id);
+        const side = change && !change.after ? 'base' : 'target';
+        const sid = side === 'base' ? comparison!.base : v.snapshot;
+        const sequence = graphSequence.current; const previousSelection = selectedId.current;
+        api<{ module: Module }>(`/snapshots/${sid}/modules/${side === 'base' ? change!.before : id}`).then(({ module }) => {
+          if (sequence !== graphSequence.current || selectedId.current !== previousSelection) return;
+          setSelected({ ...module, id, side, snapshot: sid, before: change?.before || null, flags: change?.flags || [], childCount: 0, descendantCount: 0, changedDescendants: 0, movedOut: 0, boundary: false });
+        }).catch(showError);
+      }
+    }
+  }, [enter, toggle, expanded, flow, workspace?.repository, comparison, showError]);
 
   useEffect(() => {
     if (!snapshot) return;
     const controller = new AbortController(); const sequence = ++graphSequence.current;
     setLayoutBusy(true);
-    api<GraphView>('/graph-views', { snapshot: comparison ? null : snapshot.id, comparison: comparison?.id || null, scope, expanded, kinds: kind ? [kind] : [], changes: changeFilter ? [changeFilter] : [], edgeTypes: edgeType ? [edgeType] : [], limit: 300 }, controller.signal).then(v => {
+    api<GraphView>('/graph-views', { light: true, snapshot: comparison ? null : snapshot.id, comparison: comparison?.id || null, scope, expanded, kinds: kind ? [kind] : [], changes: changeFilter ? [changeFilter] : [], edgeTypes: edgeType ? [edgeType] : [], limit: 300 }, controller.signal).then(v => {
       if (sequence !== graphSequence.current) return;
       const previous = currentView.current;
       const fit = !previous || previous.scope !== v.scope; currentView.current = v; setView(v);
       if (previous?.comparison && previous.comparison === v.comparison && previous.scope === v.scope && v.nodes.every(n => positions.current[n.id])) { renderView(v, positions.current, fit); return; }
-      const key = `xfold.layout.${v.layoutHash}`; const cached = localStorage.getItem(key);
+      const key = `xfold.layout.light.${v.layoutHash}`; const cached = localStorage.getItem(key);
       if (cached) { try { renderView(v, JSON.parse(cached), fit); return; } catch { localStorage.removeItem(key); } }
       worker.current?.terminate(); const w = new Worker(new URL('./layout.worker.ts', import.meta.url), { type: 'module' }); worker.current = w;
       w.onmessage = ({ data }) => {
@@ -175,7 +195,7 @@ export function App() {
         renderView(v, data.positions, fit);
       };
       w.onerror = e => { showError(e.message); setLayoutBusy(false); };
-      w.postMessage({ sequence, hash: v.layoutHash, nodes: v.nodes, edges: v.edges });
+      w.postMessage({ sequence, hash: v.layoutHash, nodes: v.nodes, edges: [...v.edges, ...hierarchyEdges(v)] });
     }).catch(e => { if (sequence === graphSequence.current) { setLayoutBusy(false); showError(e); } });
     return () => controller.abort();
   }, [snapshot, comparison, scope, expanded, kind, changeFilter, edgeType, renderView, showError]);
@@ -226,7 +246,7 @@ export function App() {
     if (!from || !to) { setError('Both route endpoints must exist in the selected snapshot.'); return; }
     try { const result = await api<{ reachable: boolean; nodes: string[] }>('/paths', { snapshot: inspectSide(), from, to, edgeTypes: edgeType ? [edgeType] : [] }); const ms = await Promise.all(result.nodes.map(id => api<{ module: Module }>(`/snapshots/${inspectSide()}/modules/${id}`))); setInspector({ title: 'Directed route', modules: ms.map(x => x.module), side: traversalSide, detail: result.reachable ? `${result.nodes.length - 1} directed steps · ${traversalSide} snapshot` : 'No directed route exists in this snapshot.' }); setHighlightIds(new Set(result.nodes.map(id => comparison && traversalSide === 'base' ? comparison.changes.find(c => c.before === id)?.id || id : id))); } catch (e) { showError(e); }
   };
-  const build = async () => { setError(''); try { accept(compareEnabled ? await createComparison({ base: baseRef || `${targetRef}^1`, target: targetRef, profile: snapshot?.profile || workspace?.defaultProfile }) : await createSnapshot({ revision: targetRef, profile: snapshot?.profile || workspace?.defaultProfile })); } catch (e) { showError(e); } };
+  const build = async () => { setError(''); try { accept(await createComparison({ base: compareEnabled ? baseRef : '', target: targetRef, profile: snapshot?.profile || workspace?.defaultProfile })); } catch (e) { showError(e); } };
   const changeList = async () => {
     if (!comparison) return;
     const changed = comparison.changes.filter(c => c.flags.some(f => f !== 'location'));
@@ -242,8 +262,8 @@ export function App() {
   const saveCamera = (_: unknown, viewport: Viewport) => { if (workspace && view) localStorage.setItem(`xfold.camera.${workspace.repository}.${view.scope}`, JSON.stringify(viewport)); };
 
   return <div className={`app ${motion ? 'motion' : 'still'}`}>
-    <header className="topbar"><a className="brand" href="#" onClick={e => { e.preventDefault(); setScope('root'); }}><svg viewBox="0 0 28 28" aria-hidden="true"><path d="M4 5 14 14 4 23M14 5 24 14 14 23"/></svg><span>Xfold</span><span className="version">/ local</span></a><div className="repo-label"><span>▱</span> {workspace?.name || 'Opening repository'}<span className="repo-local">LOCAL REPOSITORY</span></div><div className="top-actions"><button className="icon-button" title="Copy link to this view" aria-label="Copy view link" onClick={() => navigator.clipboard.writeText(location.href).catch(showError)}>↗</button><button className="icon-button" title="Toggle theme" aria-label="Toggle theme" onClick={() => setTheme(t => t === 'dark' ? 'light' : 'dark')}>{theme === 'dark' ? '☼' : '☾'}</button><button className="icon-button" aria-label="Keyboard guide" onClick={() => setGuide(v => !v)}>?</button></div></header>
-    <div className="revision-bar"><div className="revision-mode"><button className={!compareEnabled ? 'active' : ''} onClick={() => setCompareEnabled(false)}>Explore</button><button className={compareEnabled ? 'active' : ''} onClick={() => { setCompareEnabled(true); if (!baseRef) setBaseRef(`${targetRef}^1`); }}>Compare commits</button></div>{compareEnabled && <><label className="revision-input"><span>BASE</span><input aria-label="Base commit" value={baseRef} onChange={e => setBaseRef(e.target.value)} list="commit-options"/></label><button className="swap-button" aria-label="Swap commits" onClick={() => { setBaseRef(targetRef); setTargetRef(baseRef); }}>⇄</button></>}<label className="revision-input"><span>{compareEnabled ? 'TARGET' : 'COMMIT'}</span><input aria-label="Target commit" value={targetRef} onChange={e => setTargetRef(e.target.value)} list="commit-options" onKeyDown={e => { if (e.key === 'Enter') void build(); }}/></label><button className="primary-button small" onClick={() => void build()} disabled={!!pendingJob}>Open graph <span>↗</span></button><button className="text-button history-button" onClick={() => setHistoryOpen(v => !v)}>◷ History</button><span className="revision-note">Immutable source · no checkout required</span><datalist id="commit-options">{refs.map(r => <option key={r.name} value={r.name}>{r.commit.slice(0, 8)}</option>)}{commits.map(c => <option key={c.id} value={c.id}>{c.subject}</option>)}</datalist></div>
+    <header className="topbar"><a className="brand" href="#" onClick={e => { e.preventDefault(); setScope('root'); }}><svg viewBox="0 0 28 28" aria-hidden="true"><path d="M4 5 14 14 4 23M14 5 24 14 14 23"/></svg><span>Xfold</span><span className="version">/ light</span></a><div className="repo-label"><span>▱</span> {workspace?.name || 'Opening repository'}<span className="repo-local">LOCAL REPOSITORY</span></div><div className="top-actions"><button className="icon-button" title="Copy link to this view" aria-label="Copy view link" onClick={() => navigator.clipboard.writeText(location.href).catch(showError)}>↗</button><button className="icon-button" title="Toggle theme" aria-label="Toggle theme" onClick={() => setTheme(t => t === 'dark' ? 'light' : 'dark')}>{theme === 'dark' ? '☼' : '☾'}</button><button className="icon-button" aria-label="Keyboard guide" onClick={() => setGuide(v => !v)}>?</button></div></header>
+    <div className="revision-bar"><div className="revision-mode"><button className={!compareEnabled ? 'active' : ''} onClick={() => setCompareEnabled(false)}>Commit changes</button><button className={compareEnabled ? 'active' : ''} onClick={() => { setCompareEnabled(true); if (!baseRef) setBaseRef(`${targetRef}^1`); }}>Compare commits</button></div>{compareEnabled && <><label className="revision-input"><span>BASE</span><input aria-label="Base commit" value={baseRef} onChange={e => setBaseRef(e.target.value)} list="commit-options"/></label><button className="swap-button" aria-label="Swap commits" onClick={() => { setBaseRef(targetRef); setTargetRef(baseRef); }}>⇄</button></>}<label className="revision-input"><span>{compareEnabled ? 'TARGET' : 'COMMIT'}</span><input aria-label="Target commit" value={targetRef} onChange={e => setTargetRef(e.target.value)} list="commit-options" onKeyDown={e => { if (e.key === 'Enter') void build(); }}/></label><button className="primary-button small" onClick={() => void build()} disabled={!!pendingJob}>Review changes <span>↗</span></button><button className="text-button history-button" onClick={() => setHistoryOpen(v => !v)}>◷ History</button><span className="revision-note">Immutable source · no checkout required</span><datalist id="commit-options">{refs.map(r => <option key={r.name} value={r.name}>{r.commit.slice(0, 8)}</option>)}{commits.map(c => <option key={c.id} value={c.id}>{c.subject}</option>)}</datalist></div>
     {error && <div role="alert" className="error-banner"><span>{error}</span><button onClick={() => setError('')} aria-label="Dismiss error">×</button></div>}
     {pendingJob && <div className="build-banner" role="status"><span className="spinner"/><strong>Building semantic graph</strong><span>{job?.phase || 'queued'}{job?.counters[job.phase] ? ` · ${job.counters[job.phase].toLocaleString()} items` : ''}</span><span className="build-last">{snapshot ? 'Previous snapshot remains available' : 'Reading committed source with sem'}</span><button className="text-button" onClick={() => api<Job>(`/jobs/${pendingJob}/cancel`, {}).then(setJob).catch(showError)}>Cancel</button></div>}
     <main className="workspace" style={{ gridTemplateColumns: `${ratio}% 5px minmax(0, 1fr)` }}>
@@ -259,9 +279,9 @@ export function App() {
           event.preventDefault(); event.stopPropagation();
           if (event.altKey && node.childCount > 0) enter(node); else void selectNode(node);
         }}>
-          <ReactFlow nodes={nodes} edges={edges} nodeTypes={nodeTypes} onNodeClick={(_, n) => void selectNode(n.data)} onNodeDoubleClick={(_, n) => n.data.childCount > 0 && enter(n.data)} onEdgeClick={(_, e) => { if (view) api<{ items: EdgeChange[]; total: number }>(`/graph-views/${view.id}/edges/${e.id}?limit=100`).then(r => setInspector({ title: 'Semantic relationships', relations: r.items, total: r.total, detail: `${r.total} references · exact call sites unavailable` })).catch(showError); }} onPaneClick={() => setSearchOpen(false)} onMoveEnd={saveCamera} nodesConnectable={false} nodesDraggable={false} minZoom={.12} maxZoom={2} proOptions={{ hideAttribution: true }} colorMode={theme === 'light' ? 'light' : 'dark'}><Background variant={BackgroundVariant.Dots} gap={24} size={1} color={theme === 'light' ? '#cbd2da' : '#2a3441'}/><Controls showInteractive={false}/>{showMap && <MiniMap nodeColor={n => { const f = primaryFlag((n.data as ModuleData).flags); return f ? palette[f].color : '#7087a5'; }} maskColor={theme === 'dark' ? '#080f18bb' : '#ffffffbb'} pannable zoomable/>}</ReactFlow>
-          {!view && <div className="canvas-empty"><div className="empty-symbol">⋈</div><h1>Code, unfolded.</h1><p>{pendingJob ? 'Extracting semantic modules from your commit.' : 'Open a commit to explore its structure.'}</p></div>}
-          {view && !view.nodes.length && <div className="canvas-empty"><h2>No modules in this view.</h2><p>Clear a filter or return to a parent container.</p><button onClick={() => { setKind(''); setChangeFilter(''); setScope('root'); }}>Return to overview</button></div>}
+          <ReactFlow nodes={nodes} edges={edges} nodeTypes={nodeTypes} onNodeClick={(_, n) => void selectNode(n.data)} onNodeDoubleClick={(_, n) => n.data.childCount > 0 && enter(n.data)} onEdgeClick={(_, e) => { if (e.id.startsWith('hierarchy:')) return; if (view) api<{ items: EdgeChange[]; total: number }>(`/graph-views/${view.id}/edges/${e.id}?limit=100`).then(r => setInspector({ title: 'Semantic relationships', relations: r.items, total: r.total, detail: `${r.total} references · exact call sites unavailable` })).catch(showError); }} onPaneClick={() => setSearchOpen(false)} onMoveEnd={saveCamera} nodesConnectable={false} nodesDraggable={false} minZoom={.12} maxZoom={2} proOptions={{ hideAttribution: true }} colorMode={theme === 'light' ? 'light' : 'dark'}><Background variant={BackgroundVariant.Dots} gap={24} size={1} color={theme === 'light' ? '#cbd2da' : '#2a3441'}/><Controls showInteractive={false}/>{showMap && <MiniMap nodeColor={n => { const f = primaryFlag((n.data as ModuleData).flags); return f ? palette[f].color : '#7087a5'; }} maskColor={theme === 'dark' ? '#080f18bb' : '#ffffffbb'} pannable zoomable/>}</ReactFlow>
+          {!view && <div className="canvas-empty"><div className="empty-symbol">⋈</div><h1>Code, unfolded.</h1><p>{pendingJob ? 'Extracting semantic modules from your commit.' : 'Open a commit to review its semantic changes.'}</p></div>}
+          {view && !view.nodes.length && <div className="canvas-empty"><h2>No modules in this view.</h2><p>This commit has no matching changes. Clear a filter or select another commit.</p><button onClick={() => { setKind(''); setChangeFilter(''); setScope('root'); }}>Return to overview</button></div>}
           {layoutBusy && view && <div className="layout-status"><span className="spinner"/> Arranging modules</div>}
           {view?.truncated && <div className="limit-notice">{view.omittedNodes} nodes outside the render budget. Enter a container or narrow the view.</div>}
           {routePicking && <div className="route-notice">Select a destination node · {traversalSide} snapshot <button onClick={() => setRoutePicking(false)}>Cancel</button></div>}
@@ -273,7 +293,7 @@ export function App() {
         <footer className="graph-footer"><span><i className="status-dot"/> {snapshot ? 'Snapshot ready' : 'Waiting for snapshot'}</span><span>{snapshot ? `${snapshot.moduleCount.toLocaleString()} modules · ${snapshot.edgeCount.toLocaleString()} dependencies` : 'Powered by sem'}</span><button onClick={() => { if (snapshot) api<{ items: { code: string; message: string }[]; total: number }>(`/snapshots/${snapshot.id}/diagnostics?limit=30`).then(r => setInspector({ title: 'Analysis coverage', detail: `${snapshot.analyzedFiles}/${snapshot.fileCount} files analyzed. ${r.total} diagnostics. ${r.items.map(d => d.message).join('\n')}` })).catch(showError); }}>{snapshot ? `${snapshot.analyzedFiles}/${snapshot.fileCount} files analyzed` : empty}</button></footer>
       </section>
       <div className="splitter" role="separator" aria-label="Resize source pane" aria-orientation="vertical" tabIndex={0} onPointerDown={resize} onKeyDown={e => { if (e.key === 'ArrowLeft') setRatio(v => Math.max(35, v - 2)); if (e.key === 'ArrowRight') setRatio(v => Math.min(78, v + 2)); }}/>
-      <CodePane selected={selected} source={source} diff={diff} loading={sourceLoading} theme={theme} onPosition={onCodePosition} onDiffLayout={expanded => setRatio(expanded ? 35 : 66.67)} onExpand={() => selected && enter(selected)}/>
+      <CodePane comparison={comparison} onChangeSelect={(module, side) => void openModule(module, side)} selected={selected} source={source} diff={diff} loading={sourceLoading} theme={theme} onPosition={onCodePosition} onDiffLayout={expanded => setRatio(expanded ? 35 : 66.67)} onExpand={() => selected && enter(selected)}/>
     </main>
     {historyOpen && <div className="history-drawer"><div className="inspector-heading"><h3>Commit history</h3><button aria-label="Close history" onClick={() => setHistoryOpen(false)}>×</button></div><p>Select a local commit. The working tree stays untouched.</p>{commits.map(c => <button className="commit-row" key={c.id} onClick={() => { setTargetRef(c.id); setHistoryOpen(false); }}><code>{c.id.slice(0, 8)}</code><strong>{c.subject}</strong><small>{c.author} · {new Date(c.time * 1000).toLocaleDateString()}</small></button>)}{historyOffset !== null && <button className="text-button" onClick={() => api<{ items: Commit[]; nextOffset: number | null }>(`/commits?${params({ offset: historyOffset, limit: 30 })}`).then(r => { setCommits(cs => [...cs, ...r.items]); setHistoryOffset(r.nextOffset); }).catch(showError)}>Load more commits</button>}</div>}
     <footer className="app-footer"><span>Xfold <b>0.1</b></span><span>{comparison ? 'SEMANTIC COMPARISON' : 'SEMANTIC EXPLORER'}</span><span>{receipt ? `${receipt.stats.mode} · ${(receipt.stats.durationMs / 1000).toFixed(2)}s · ${receipt.stats.filesReused} files reused` : 'Local · private · read only'}</span></footer>

@@ -406,7 +406,8 @@ export interface components {
             id: string;
         };
         CompareRequest: {
-            base: string;
+            /** @description Empty means the target commit’s first parent (or an empty tree for a root commit). */
+            base?: string;
             profile?: components["schemas"]["Profile"];
             target: string;
         };
@@ -457,6 +458,8 @@ export interface components {
             edgeTypes?: string[];
             expanded?: string[];
             kinds?: string[];
+            /** @description Restrict the projection to semantic changes, ancestors, and direct children. */
+            light?: boolean;
             limit?: number | null;
             scope?: string | null;
             snapshot?: string | null;

@@ -1,10 +1,13 @@
 # Xfold
 
-Explore committed code as semantic modules. Xfold reads a local Git repository,
-builds a dependency graph using **sem**, and serves a graph and source viewer
-on `127.0.0.1`. The graph starts at the repository overview; enter a directory,
-file, or class to unfold its entities. Select a module to read its exact
-committed source.
+The `light` branch reviews a commit as a small graph of semantic changes.
+The graph shows changed modules, their ancestor containers, and direct children.
+The right-hand pane is a Git change manager: semantic diff results occupy the
+upper half, and selecting a result opens its committed code diff below.
+
+`--ref` (or `--to`) selects the commit to review against its first parent.
+A root commit is compared against an empty tree. Use `--from` and `--to` to
+review an explicit range. Merge commits default to their first parent.
 
 ```sh
 xfold /path/to/repository
@@ -49,11 +52,13 @@ checkout does not publish anything to npm.
 
 ## Explore and compare
 
-- Double-click a container, or use its enter arrow, to drill down.
-- Use the `+` control to expose children without changing scope.
+- The overview opens directly on the change neighborhood. Double-click a
+  container, or use its enter arrow, to narrow the scope.
+- The change neighborhood is already unfolded; unrelated siblings remain hidden.
 - Use Tab and Enter to select a focused graph node; Alt+Enter enters a container.
 - Search with `/`; use `0` to fit the graph, `+`/`−` to zoom, and `M` for the minimap.
-- Select a node to open its source. Cmd/Ctrl-click in the source editor to focus
+- Select a semantic result in the upper review pane or a graph node to open
+  the related code change in the lower pane. Cmd/Ctrl-click in the source editor to focus
   the smallest enclosing semantic entity.
 - Compare two commits in one graph. Green means added, yellow modified, red
   deleted, blue moved, cyan renamed, and magenta reordered; badges and borders
@@ -66,11 +71,22 @@ checkout does not publish anything to npm.
   The recipient must run Xfold on the same repository and replace the local
   server origin if their port differs.
 
-The graph pane has a 300-node display budget. Full topology stays on the
+The neighborhood uses sem's headline changes, excluding location-only shifts
+and redundant parent changes. File-only edits remain reviewable when there is
+no semantic headline for that file. Parent means containment (file/class/etc.),
+not callers or dependencies. Moves retain old and new ancestor context; deleted
+entities use base source. Dashed `contains` links show hierarchy.
+
+The graph pane has a 300-node display budget, prioritizing changed modules. Full topology stays on the
 backend; drill down or filter when the view reports omitted nodes. Arrows
 point from the dependent to its dependency. Cycles are valid.
 
 ## Analysis and cache
+
+Light mode reduces graph rendering and layout work. Analysis still builds and
+caches full snapshots to preserve sem matching and dependency accuracy; it does
+not promise faster initial parsing of a large repository. Semantic results are
+loaded in pages of 50, including their module metadata in one request.
 
 All sem entity types and compiled grammars are bundled. Dependency quality
 depends on sem's static resolver and language support. Dependencies are

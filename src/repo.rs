@@ -19,7 +19,12 @@ pub fn identity(repo: &Repository) -> String {
             .as_bytes(),
     )
 }
+pub const EMPTY_TREE: &str = ":empty";
+
 pub fn resolve(repo: &Repository, revision: &str) -> Result<String> {
+    if revision == EMPTY_TREE {
+        return Ok(EMPTY_TREE.into());
+    }
     Ok(repo.revparse_single(revision).with_context(|| format!("Revision {revision:?} is unavailable locally. Fetch it using Git before opening it in Xfold."))?.peel_to_commit()?.id().to_string())
 }
 
@@ -45,6 +50,9 @@ pub fn tree_files(
     repo: &Repository,
     commit: &str,
 ) -> Result<(String, BTreeMap<String, BlobEntry>)> {
+    if commit == EMPTY_TREE {
+        return Ok((EMPTY_TREE.into(), BTreeMap::new()));
+    }
     let tree = repo.find_commit(Oid::from_str(commit)?)?.tree()?;
     let mut files = BTreeMap::new();
     let mut error = None;

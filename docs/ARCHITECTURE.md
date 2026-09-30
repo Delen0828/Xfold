@@ -13,6 +13,7 @@ analysis, immutable facts, comparison, and browser state separate.
 | `src/jobs.rs` | Serialized jobs, worker subprocess lifetime, progress sequences, cancellation and publication. |
 | `src/api.rs` | Loopback API, source access through manifests, cached immutable queries, embedded browser assets, OpenAPI. |
 | `web/src/App.tsx` | Revision selection, graph navigation, camera/layout caches, keyboard/motion and request ordering. |
+| `web/src/SemanticChanges.tsx` | Paginated semantic results and selection in the upper half of the review pane. |
 | `web/src/CodePane.tsx` | Read-only Monaco source/diff models, byte-coordinate conversion, model lifetime. |
 | `web/src/layout.worker.ts` | Local ELK worker, deterministic bounded layout. |
 
@@ -112,3 +113,20 @@ is limited to sem's extracted entity endpoints; exact call sites are unavailable
 The local verified artifact is macOS arm64. The workflow defines the other
 requested native targets; successful CI builds and packed smoke tests on those
 hosts are still needed before claiming those platforms as validated releases.
+
+## Light projection
+
+`GraphRequest.light` selects the change neighborhood for comparisons. The browser
+always uses it; snapshot/build and full graph APIs remain available to existing
+tools. The projection index caches sem headline seeds, their ancestors (including
+old ancestors of moved modules), and direct children. File-only changes are
+fallback seeds. Boundary dependencies cannot introduce unrelated modules. The
+300-node budget prefers seeds; narrowing scope and semantic result selection
+provide access to changes outside that budget. Client-side containment links
+participate in layout but are not represented as semantic dependency edges.
+
+`GET /comparisons/{id}/changes` returns paginated seeds with inline `module`
+metadata, keeping review independent of graph scope and display truncation.
+An omitted/empty comparison base resolves to the target's first parent. Root
+commits use the reserved `:empty` snapshot revision, materialized entirely in
+the private cache without writing objects to the user's Git repository.

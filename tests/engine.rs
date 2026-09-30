@@ -600,3 +600,126 @@ fn overload_reordering_and_ambiguous_reused_sem_ids() {
     assert!(diff.after.is_none());
     assert!(comparison.summary.get("deleted").copied().unwrap_or(0) >= 2);
 }
+
+#[test]
+fn light_projection_excludes_unrelated_siblings_and_keeps_deleted_context() {
+    let (_dir, repo, store) = setup();
+    let a = commit(&repo, &[
+        ("src/service.py", Some("class Service:\n    def changed(self):\n        return 1\n\n    def sibling(self):\n        return 2\n\ndef removed():\n    return 3\n")),
+        ("unrelated.py", Some("def unrelated():\n    return 0\n")),
+        ("notes.txt", Some("before\n")),
+    ]);
+    let mut engine = Engine::new(repo.workdir().unwrap(), store.clone()).unwrap();
+    let (base, _) = build(&mut engine, &a, false);
+    let b = commit(&repo, &[
+        ("src/service.py", Some("class Service:\n    def changed(self):\n        return 4\n\n    def sibling(self):\n        return 2\n")),
+        ("notes.txt", Some("after\n")),
+    ]);
+    let (target, _) = build(&mut engine, &b, false);
+    let c = compare::compare(&base, &target, &store).unwrap();
+    let request = GraphRequest {
+        light: true,
+        comparison: Some(c.id.clone()),
+        ..Default::default()
+    };
+    let view = query::graph_view(&target, Some(&base), Some(&c), &request).unwrap();
+    let names: BTreeSet<_> = view.nodes.iter().map(|n| n.module.name.as_str()).collect();
+    assert!(
+        names.contains("changed")
+            && names.contains("Service")
+            && names.contains("service.py")
+            && names.contains("src")
+    );
+    assert!(names.contains("removed") && names.contains("notes.txt"));
+    assert!(
+        !names.contains("sibling")
+            && !names.contains("unrelated")
+            && !names.contains("unrelated.py")
+    );
+    assert!(view
+        .nodes
+        .iter()
+        .any(|n| n.module.name == "removed" && n.side == "base"));
+    assert!(!view.truncated);
+    let expanded = GraphRequest {
+        expanded: view.nodes.iter().map(|n| n.module.id.clone()).collect(),
+        ..request.clone()
+    };
+    let expanded = query::graph_view(&target, Some(&base), Some(&c), &expanded).unwrap();
+    assert_eq!(view.nodes.len(), expanded.nodes.len());
+    let limited = query::graph_view(
+        &target,
+        Some(&base),
+        Some(&c),
+        &GraphRequest {
+            limit: Some(1),
+            ..request
+        },
+    )
+    .unwrap();
+    assert!(limited.truncated);
+    assert_eq!(limited.omitted_nodes, view.nodes.len() - 1);
+    assert!(query::change_seeds(&c, &target, &base)
+        .iter()
+        .any(|c| c.id == limited.nodes[0].module.id));
+    let unchanged = compare::compare(&target, &target, &store).unwrap();
+    assert!(query::graph_view(
+        &target,
+        Some(&target),
+        Some(&unchanged),
+        &GraphRequest {
+            light: true,
+            ..Default::default()
+        }
+    )
+    .unwrap()
+    .nodes
+    .is_empty());
+}
+
+#[test]
+fn light_root_commit_and_direct_child_context() {
+    let (_dir, repo, store) = setup();
+    let a = commit(
+        &repo,
+        &[(
+            "lib.py",
+            Some("class Example:\n    def child(self):\n        return 1\n"),
+        )],
+    );
+    let mut engine = Engine::new(repo.workdir().unwrap(), store.clone()).unwrap();
+    let (base, receipt) = build(&mut engine, xfold::repo::EMPTY_TREE, false);
+    store.publish(&base, &receipt).unwrap();
+    assert!(base.files.is_empty());
+    let (target, _) = build(&mut engine, &a, false);
+    let mut c = compare::compare(&base, &target, &store).unwrap();
+    let view = query::graph_view(
+        &target,
+        Some(&base),
+        Some(&c),
+        &GraphRequest {
+            light: true,
+            ..Default::default()
+        },
+    )
+    .unwrap();
+    assert!(view
+        .nodes
+        .iter()
+        .any(|n| n.module.name == "Example" && n.flags.contains(&"added".into())));
+    // A changed class includes its direct child even if sem suppresses that child.
+    for change in &mut c.changes {
+        change.headline = change.id == module(&target, "Example").id;
+    }
+    let view = query::graph_view(
+        &target,
+        Some(&base),
+        Some(&c),
+        &GraphRequest {
+            light: true,
+            ..Default::default()
+        },
+    )
+    .unwrap();
+    assert!(view.nodes.iter().any(|n| n.module.name == "child"));
+}

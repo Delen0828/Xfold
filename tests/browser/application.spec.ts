@@ -13,16 +13,22 @@ test('overview, drill-down, semantic diff, deleted source, and offline assets', 
   page.on('pageerror', e => errors.push(e.message));
   page.on('request', r => { if (!r.url().startsWith(server.url) && !r.url().startsWith('data:') && !r.url().startsWith('blob:')) remote.push(r.url()); });
   await page.goto(server.url);
-  await expect(page.locator('.semantic-node')).toHaveCount(2);
+  await expect(page.locator('.semantic-node')).toHaveCount(7);
+  await expect(page.locator('.node-name').filter({ hasText: /^README.md$/ })).toHaveCount(0);
+  await expect(page.locator('.node-name').filter({ hasText: /^layout.py$/ })).toHaveCount(0);
   await expect(page.getByRole('region', { name: 'Semantic graph' })).toBeVisible();
   const directory = page.locator('.react-flow__node').filter({ has: page.locator('.node-name').filter({ hasText: /^src$/ }) });
   await directory.focus(); await page.keyboard.press('Enter'); await expect(page.locator('.source-heading h2')).toHaveText('src');
   await page.keyboard.press('Alt+Enter');
-  await expect(page.locator('.semantic-node')).toHaveCount(4);
+  await expect(page.locator('.semantic-node')).toHaveCount(7);
   await page.getByRole('button', { name: 'Enter render.py', exact: true }).click();
   await expect(page.locator('.node-name').filter({ hasText: /^render$/ })).toBeVisible();
-  await page.locator('.node-name').filter({ hasText: /^render$/ }).click();
+  await page.locator('.semantic-change').filter({ has: page.locator('strong').filter({ hasText: /^render$/ }) }).click();
   await expect(page.locator('.source-heading h2')).toHaveText('render');
+  const topHalf = await page.getByRole('region', { name: 'Semantic diff results' }).boundingBox();
+  const bottomHalf = await page.getByRole('region', { name: 'Related code change' }).boundingBox();
+  expect(Math.abs(topHalf!.height - bottomHalf!.height)).toBeLessThan(3);
+  expect(bottomHalf!.y).toBeGreaterThan(topHalf!.y);
   await expect(page.locator('.monaco-diff-editor')).toBeVisible();
   await expect(page.locator('.monaco-diff-editor .view-lines').first()).toContainText('def');
   await expect(page.locator('.semantic-node').filter({ has: page.locator('.node-name').filter({ hasText: /^export_svg$/ }) })).toHaveClass(/added/);
@@ -48,13 +54,16 @@ test('overview, drill-down, semantic diff, deleted source, and offline assets', 
 test('search, source coordinates, deep links, reduced motion, and keyboard navigation', async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.goto(server.url);
-  await expect(page.locator('.semantic-node')).toHaveCount(2);
+  await expect(page.locator('.semantic-node')).toHaveCount(7);
+  await expect(page.locator('.node-name').filter({ hasText: /^README.md$/ })).toHaveCount(0);
+  await expect(page.locator('.node-name').filter({ hasText: /^layout.py$/ })).toHaveCount(0);
   await page.keyboard.press('/');
   const search = page.getByRole('textbox', { name: 'Find module' }); await expect(search).toBeFocused();
   await search.fill('arrange'); await page.getByRole('option').filter({ hasText: 'arrange' }).click();
   await expect(page.locator('.source-heading h2')).toHaveText('arrange');
   await expect(page.locator('.app')).toHaveClass(/still/);
   const link = page.url(); expect(link).toContain('commit='); expect(link).toContain('node='); expect(link).toContain('base=');
+  await page.getByRole('button', { name: 'Compare commits', exact: true }).click();
   await page.getByRole('combobox', { name: 'Base commit', exact: true }).fill('HEAD~9');
   expect(new URL(page.url()).hash).toBe(new URL(link).hash);
   await page.reload(); await expect(page.locator('.source-heading h2')).toHaveText('arrange');
@@ -92,4 +101,54 @@ test('API pins source to commits, expands aggregates, rejects foreign origins, a
   const preserved = await request.get(`${server.url}/api/v1/snapshots/${comparison.target}/source?module=${entity.id}`); expect(preserved.ok()).toBeTruthy();
   const restart = await (await request.post(`${server.url}/api/v1/snapshots`, { data: { revision: fixture.target, force: true } })).json(); await waitForArtifact(server.url, restart);
   const receipt = await (await request.get(`${server.url}/api/v1/snapshots/${comparison.target}/receipt`)).json(); expect(receipt.validated).toBe(true);
+});
+
+
+test('single-commit defaults, root commits, and empty comparisons', async ({ page, request }) => {
+  const local = createFixture();
+  const automatic = await startServer(local, [], false);
+  try {
+    const workspace = await (await request.get(`${automatic.url}/api/v1/workspace`)).json();
+    const initial = await waitForArtifact(automatic.url, workspace.initial);
+    expect(initial.kind).toBe('comparison');
+    const c = await (await request.get(`${automatic.url}/api/v1/comparisons/${initial.id}`)).json();
+    const base = await (await request.get(`${automatic.url}/api/v1/snapshots/${c.base}`)).json();
+    expect(base.commit).toBe(local.base);
+    const rootJob = await (await request.post(`${automatic.url}/api/v1/comparisons`, { data: { target: local.base } })).json();
+    const root = await waitForArtifact(automatic.url, rootJob);
+    const rootComparison = await (await request.get(`${automatic.url}/api/v1/comparisons/${root.id}`)).json();
+    const rootBase = await (await request.get(`${automatic.url}/api/v1/snapshots/${rootComparison.base}`)).json();
+    expect(rootBase.commit).toBe(':empty');
+    expect(rootBase.fileCount).toBe(0);
+    await page.goto(`${automatic.url}/#commit=${local.base}`);
+    await expect(page.locator('.semantic-change')).not.toHaveCount(0);
+    await page.locator('.semantic-change').first().click();
+    await expect(page.locator('.monaco-diff-editor')).toBeVisible();
+    await page.reload();
+    await expect(page.locator('.monaco-diff-editor')).toBeVisible();
+    await page.getByRole('button', { name: 'Compare commits', exact: true }).click();
+    await page.getByRole('combobox', { name: 'Base commit', exact: true }).fill(local.base);
+    await page.getByRole('button', { name: 'Review changes' }).click();
+    await expect(page.getByText('No semantic changes in this comparison.')).toBeVisible();
+    await expect(page.locator('.semantic-node')).toHaveCount(0);
+  } finally { await automatic.stop(); local.clean(); }
+});
+
+test('semantic results paginate independently of graph scope', async ({ page }) => {
+  const local = createFixture();
+  writeFileSync(join(local.repo, 'many.py'), Array.from({ length: 65 }, (_, i) => `def change_${i}():\n    return ${i}\n`).join('\n'));
+  local.git('add', 'many.py'); local.git('commit', '-qm', 'Many independent changes'); local.target = local.git('rev-parse', 'HEAD');
+  const automatic = await startServer(local, [], false);
+  try {
+    await page.goto(automatic.url);
+    await expect(page.locator('.semantic-change')).toHaveCount(50);
+    await page.getByRole('button', { name: 'Next', exact: true }).click();
+    await expect(page.locator('.semantic-change')).toHaveCount(15);
+    const lastPageName = await page.locator('.semantic-change strong').first().innerText();
+    await page.locator('.semantic-change').first().click();
+    await expect(page.locator('.source-heading h2')).toHaveText(lastPageName);
+    await expect(page.locator('.monaco-diff-editor')).toBeVisible();
+    await page.getByRole('button', { name: 'Previous', exact: true }).click();
+    await expect(page.locator('.semantic-change')).toHaveCount(50);
+  } finally { await automatic.stop(); local.clean(); }
 });

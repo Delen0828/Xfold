@@ -14,4 +14,4 @@ export type Dependency = components['schemas']['Dependency'];
 export type EdgeChange = components['schemas']['EdgeChange'];
 export type Commit = { id: string; subject: string; author: string; time: number; parents: string[] };
 export type SnapshotInfo = { id: string; commit: string; profile: Profile; moduleCount: number; edgeCount: number; fileCount: number; analyzedFiles: number; kinds: Record<string, number>; diagnosticCount: number };
-export type Workspace = { repository: string; name: string; path: string; engine: string; initial: ReadyOrJob; defaultRevision: string; defaultProfile: Profile };
+export type Workspace = { repository: string; name: string; path: string; engine: string; initial: ReadyOrJob; defaultRevision: string; compareRange: boolean; defaultProfile: Profile };

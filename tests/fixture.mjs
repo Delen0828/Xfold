@@ -20,9 +20,9 @@ export function createFixture() {
   file('src/render.py', '# UNCOMMITTED SENTINEL\n');
   return { root, repo, base, target, git, clean: () => rmSync(root, { recursive: true, force: true }) };
 }
-export async function startServer(fixture, extra = []) {
+export async function startServer(fixture, extra = [], compare = true) {
   const executable = process.env.XFOLD_BINARY || resolve('target/release/xfold');
-  const child = spawn(executable, [fixture.repo, '--from', fixture.base, '--to', fixture.target, '--cache-dir', join(fixture.root, 'cache'), '--no-open', ...extra], { stdio: ['ignore', 'pipe', 'pipe'] });
+  const child = spawn(executable, [fixture.repo, ...(compare ? ['--from', fixture.base, '--to', fixture.target] : ['--ref', fixture.target]), '--cache-dir', join(fixture.root, 'cache'), '--no-open', ...extra], { stdio: ['ignore', 'pipe', 'pipe'] });
   let logs = ''; child.stderr.on('data', d => { logs += d; });
   const url = await new Promise((ok, reject) => {
     const timeout = setTimeout(() => reject(new Error(`Server did not start: ${logs}`)), 30000);

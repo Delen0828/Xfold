@@ -93,3 +93,20 @@ runtime check used the Node version shown above. sem remains a static analyzer
 with conservative resolution and no call-site spans. Very large repositories
 can require substantial memory and first-build time; the report establishes
 behavior for these fixtures, not an upper bound for arbitrary repositories.
+
+## Light branch validation
+
+The light review workflow passes 14 Rust integration tests, two launcher tests,
+and five Chrome/Playwright tests. Coverage includes changed-module containment,
+unrelated sibling exclusion, deleted source, direct children, node budgets,
+first-parent defaults, root commits, empty comparisons, result pagination,
+source links outside the projected graph, and equal-height review panes.
+TypeScript checking, the production web build, and the debug native build pass.
+The inherited Monaco bundle still produces Vite's large-chunk warning.
+
+The `stackplot` pair in `fixtures/matplotlib.json` was also checked against the
+local bare Matplotlib repository: the target snapshot contains **114,538
+modules**, while the light overview renders **11 nodes**, **one dependency**,
+and lists **three semantic changes**, without truncation. This measures the
+projection size; full snapshot analysis remains unchanged. The local report is
+`artifacts/light-matplotlib-smoke.json`.

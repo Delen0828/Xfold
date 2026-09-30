@@ -182,6 +182,8 @@ pub struct BuildRequest {
 #[derive(Clone, Debug, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct CompareRequest {
+    /// Empty means the target commit’s first parent (or an empty tree for a root commit).
+    #[serde(default)]
     pub base: String,
     pub target: String,
     #[serde(default)]
@@ -212,6 +214,9 @@ pub struct ReadyOrJob {
 #[derive(Clone, Debug, Serialize, Deserialize, ToSchema, Default)]
 #[serde(rename_all = "camelCase")]
 pub struct GraphRequest {
+    /// Restrict the projection to semantic changes, ancestors, and direct children.
+    #[serde(default)]
+    pub light: bool,
     pub snapshot: Option<String>,
     pub comparison: Option<String>,
     pub scope: Option<String>,

@@ -1,11 +1,17 @@
-# Xfold v1 specification
+# Xfold light specification
 
 ## Product contract
 
-Xfold is a local code exploration tool that turns a Git repository into a
-browsable graph of semantic modules. Users navigate from repository structure
-to individual entities, inspect exact source, follow dependencies, and compare
-commits.
+Xfold light is a local Git change review tool. It inherits the snapshot,
+comparison, source, and dependency engine from the main branch. The browser
+visualizes sem headline changes with their ancestor chain and direct children,
+including base-side context for deletions and moves. Unrelated modules and
+location-only shifts do not seed the graph. Changed files without semantic
+headlines remain visible. The initial view unfolds this subset directly.
+
+The read-only change manager splits vertically into equal halves: a paginated
+list of semantic changes above and the selected module's code diff below.
+Selection in either the graph or the semantic list updates the code diff.
 
 - A semantic module is an entity from sem's language/format-specific parser.
   Preserve its original entity type, name, identity, containment, and source.
@@ -30,7 +36,7 @@ xfold build /path/to/repository --ref <revision> --json
 
 Start a loopback server, print its URL, and open the browser unless --no-open
 is supplied. Compare selected snapshots directly. A commit-to-parent comparison
-defaults to its first parent. All runtime assets and analysis operate offline.
+defaults to its first parent; root commits use an empty tree. All runtime assets and analysis operate offline.
 
 ## Architecture and data
 

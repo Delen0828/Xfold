@@ -141,8 +141,17 @@ impl Coordinator {
     }
     pub async fn comparison(&self, mut request: CompareRequest) -> Result<ReadyOrJob> {
         let git = repo::open(&self.repository)?;
-        request.base = repo::resolve(&git, &request.base)?;
         request.target = repo::resolve(&git, &request.target)?;
+        request.base = if request.base.is_empty() {
+            let commit = git.find_commit(git2::Oid::from_str(&request.target)?)?;
+            if commit.parent_count() == 0 {
+                repo::EMPTY_TREE.into()
+            } else {
+                commit.parent_id(0)?.to_string()
+            }
+        } else {
+            repo::resolve(&git, &request.base)?
+        };
         request.profile.extensions.sort();
         request.profile.extensions.dedup();
         let a = snapshot_id(&repo::identity(&git), &request.base, &request.profile)?;

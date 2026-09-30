@@ -15,6 +15,38 @@ pub fn ancestors(modules: &BTreeMap<String, Module>, id: &str) -> Vec<String> {
     out
 }
 
+/// Semantic headlines are the seeds, not containers whose hashes changed merely
+/// because a descendant changed. Keep file-only edits (including unsupported text).
+pub fn change_seeds<'a>(
+    comparison: &'a Comparison,
+    target: &Snapshot,
+    base: &Snapshot,
+) -> Vec<&'a Change> {
+    let module = |c: &Change| {
+        c.after
+            .as_ref()
+            .and_then(|id| target.modules.get(id))
+            .or_else(|| c.before.as_ref().and_then(|id| base.modules.get(id)))
+    };
+    let meaningful = |c: &Change| c.flags.iter().any(|f| f != "location");
+    let entity_paths: BTreeSet<_> = comparison
+        .changes
+        .iter()
+        .filter(|c| c.headline && meaningful(c))
+        .filter_map(|c| module(c).map(|m| m.path.clone()))
+        .collect();
+    comparison
+        .changes
+        .iter()
+        .filter(|c| {
+            meaningful(c)
+                && (c.headline
+                    || module(c)
+                        .is_some_and(|m| m.kind == "file" && !entity_paths.contains(&m.path)))
+        })
+        .collect()
+}
+
 /// Immutable hierarchy aggregates shared by every projection of one artifact.
 pub struct ProjectionIndex {
     modules: BTreeMap<String, Module>,
@@ -25,6 +57,8 @@ pub struct ProjectionIndex {
     descendants: BTreeMap<String, usize>,
     changed_descendants: BTreeMap<String, usize>,
     moved_out: BTreeMap<String, usize>,
+    light_ids: BTreeSet<String>,
+    seeds: BTreeSet<String>,
 }
 impl ProjectionIndex {
     pub fn new(
@@ -96,7 +130,27 @@ impl ProjectionIndex {
                 }
             }
         }
+        let mut light_ids = BTreeSet::new();
+        let mut seeds = BTreeSet::new();
+        if let (Some(base), Some(c)) = (base, comparison) {
+            for change in change_seeds(c, target, base) {
+                seeds.insert(change.id.clone());
+                light_ids.insert(change.id.clone());
+                light_ids.extend(parents.get(&change.id).into_iter().flatten().cloned());
+                light_ids.extend(children.get(&change.id).into_iter().flatten().cloned());
+                // Moves retain both the old and new containing hierarchy.
+                if let Some(before) = &change.before {
+                    light_ids.extend(
+                        ancestors(&base.modules, before)
+                            .into_iter()
+                            .filter_map(|id| base_ids.get(&id).cloned()),
+                    );
+                }
+            }
+        }
         Self {
+            light_ids,
+            seeds,
             modules,
             base_ids,
             change_by_id,
@@ -140,7 +194,12 @@ pub fn graph_view_indexed(
         descendants,
         changed_descendants,
         moved_out,
+        light_ids,
+        seeds,
     } = index;
+    if req.light && comparison.is_none() {
+        bail!("A light graph requires a commit comparison");
+    }
     let scope = req.scope.as_deref().unwrap_or(ROOT);
     if !modules.contains_key(scope) {
         bail!("Unknown graph scope {scope}");
@@ -163,6 +222,22 @@ pub fn graph_view_indexed(
             }
         }
     }
+    if req.light {
+        // Open directly on the whole change neighborhood. Scope can narrow it,
+        // but expansion must never pull unrelated siblings into this projection.
+        visible = light_ids
+            .iter()
+            .filter(|id| {
+                id.as_str() != ROOT
+                    && (scope == ROOT
+                        || id.as_str() == scope
+                        || parents
+                            .get(*id)
+                            .is_some_and(|ps| ps.iter().any(|p| p == scope)))
+            })
+            .cloned()
+            .collect();
+    }
     visible.retain(|id| {
         let m = &modules[id];
         (req.kinds.is_empty() || !m.is_entity() || req.kinds.contains(&m.kind))
@@ -177,6 +252,7 @@ pub fn graph_view_indexed(
     let mut ordered: Vec<_> = visible.into_iter().collect();
     ordered.sort_by_key(|id| {
         (
+            req.light && !seeds.contains(id),
             &modules[id].path,
             modules[id].source.as_ref().map(|s| s.start_line),
             id.clone(),
@@ -232,7 +308,7 @@ pub fn graph_view_indexed(
             })
     };
     // Only add boundary nodes for relationships connected to visible in-scope nodes.
-    for relation in &relations {
+    for relation in relations.iter().filter(|_| !req.light) {
         if !req.edge_types.is_empty() && !req.edge_types.contains(&relation.edge.kind) {
             continue;
         }
@@ -263,6 +339,9 @@ pub fn graph_view_indexed(
         }
         let f = display_id(&relation.edge.from, &relation.side);
         let t = display_id(&relation.edge.to, &relation.side);
+        if req.light && (!light_ids.contains(&f) || !light_ids.contains(&t)) {
+            continue;
+        }
         let (Some(from), Some(to)) = (project(&f, &visible), project(&t, &visible)) else {
             omitted_edges += 1;
             continue;
@@ -304,7 +383,14 @@ pub fn graph_view_indexed(
             side: if deleted { "base" } else { "target" }.into(),
             before: change.and_then(|c| c.before.clone()),
             flags: change.map(|c| c.flags.clone()).unwrap_or_default(),
-            child_count: children.get(&id).map(|v| v.len()).unwrap_or(0),
+            child_count: children
+                .get(&id)
+                .map(|v| {
+                    v.iter()
+                        .filter(|id| !req.light || light_ids.contains(*id))
+                        .count()
+                })
+                .unwrap_or(0),
             descendant_count: descendants.get(&id).copied().unwrap_or(0),
             changed_descendants: changed_descendants.get(&id).copied().unwrap_or(0),
             moved_out: moved_out.get(&id).copied().unwrap_or(0),
